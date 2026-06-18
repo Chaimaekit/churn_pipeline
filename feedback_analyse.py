@@ -1,4 +1,3 @@
-# feedback_analysis.py
 import os
 import json
 import pandas as pd
@@ -7,18 +6,36 @@ from dotenv import load_dotenv
 from tabulate import tabulate
 
 load_dotenv()
+os.makedirs("data", exist_ok=True)
 
-def analyze_feedback_with_schema(feedback_file, output_file="processed_feedback.csv", batch_size=20):
+
+def analyze_feedback_with_schema(feedback_file, output_file="data/processed_feedback.csv"):
+    # Initialize Groq client
     groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
     
-    # Ingest and explicitly slice to test the first 20 rows
+    if not os.path.exists(feedback_file):
+        print(f"Error: Scraped file '{feedback_file}' not found.")
+        return
+
+    # Read your local scraped file and select the top 20 rows
     review_df = pd.read_csv(feedback_file).head(20)
     analysis_results = []
     
-    print(f"--> Ingesting {len(review_df)} reviews for schema validation test...")
+    print(f"--> Ingesting {len(review_df)} reviews from scraped file for Darija analysis...")
     
-    for _, row in review_df.iterrows():
-        text_col = 'feedback_text' if 'feedback_text' in row else 'feedback'
+    for idx, (_, row) in enumerate(review_df.iterrows()):
+        # 1. Correctly extract the comment text from your specific column structure
+        if 'comment_text' in row and pd.notna(row['comment_text']):
+            text_payload = str(row['comment_text'])
+        elif 'text' in row and pd.notna(row['text']):
+            text_payload = str(row['text'])
+        else:
+            continue
+            
+        # 2. Extract the true numeric structural ID (e.g., 1572177951614269)
+        current_id = str(row['id'])
+        
+        # 3. Request LLM structured classification tuned for Moroccan Dialect
         response = groq.chat.completions.create(
             model="openai/gpt-oss-120b",
             response_format={"type": "json_object"},
@@ -26,43 +43,55 @@ def analyze_feedback_with_schema(feedback_file, output_file="processed_feedback.
                 {
                     "role": "system",
                     "content": (
-                        "You are an expert telecom classification engine. Analyze the array of texts provided by the user.\n"
+                        "You are an expert telecom classification engine specializing in Moroccan Darija (both Arabic script and Arabizi/Latin script).\n"
+                        "Analyze the text provided by the user.\n"
                         "Return a JSON object containing a single root array named 'results'.\n"
-                        "Evaluate each item step-by-step and map them strictly to these rules:\n"
-                        "1. If text mentions 'cost', 'expensive', or 'monthly cost', use: feedback_category='pricing', sentiment='negative', complaint_intensity=3.\n"
-                        "2. If text mentions 'works well' or 'no major complaints', use: feedback_category='service_quality', sentiment='positive', complaint_intensity=1.\n"
-                        "3. If text mentions 'customer support' or 'issue was not solved', use: feedback_category='customer_support', sentiment='negative', complaint_intensity=5.\n"
-                        "4. If text mentions 'switching' or 'not satisfied', use: feedback_category='churn_intent', sentiment='negative', complaint_intensity=5.\n\n"
+                        "Evaluate the sentiment, category, and risk score carefully based on Moroccan dialect nuances:\n\n"
+                        "Classification Rules:\n"
+                        "1. If text complains about price, subscriptions, or high billing (e.g., 'غالي', 'بزاف', 'ثمن', 'فلوس', 'غالي بزاف'), use:\n"
+                        "   feedback_category='pricing', sentiment='negative', complaint_intensity=3.\n"
+                        "2. If text expresses neutral questions, general remarks, or satisfaction (e.g., 'واش غادي يلقاوهم', 'زوين', 'مزيان'), use:\n"
+                        "   feedback_category='service_quality', sentiment='neutral', complaint_intensity=1.\n"
+                        "3. If text mentions bad customer support, networks, or unhelpful service (e.g., 'سيرفيس عيان', 'ماجاوبونيش', 'دعم', 'ريزو عيان'), use:\n"
+                        "   feedback_category='customer_support', sentiment='negative', complaint_intensity=5.\n"
+                        "4. If text expresses explicit intent to switch or cancel service (e.g., 'غادي نلغي', 'شركاء خرين', 'نبدل', 'انوي', 'اتصالات'), use:\n"
+                        "   feedback_category='churn_intent', sentiment='negative', complaint_intensity=5.\n\n"
                         "Output Format Blueprint:\n"
                         "{\n"
                         '  "results": [\n'
-                        '    {"customer_id": "CUST_000001", "feedback_category": "pricing", "sentiment": "negative", "complaint_intensity": 3}\n'
+                        '    {"customer_id": "PLACEHOLDER", "feedback_category": "service_quality", "sentiment": "neutral", "complaint_intensity": 1}\n'
                         '  ]\n'
                         "}"
                     )
                 },
-                {"role": "user", "content": f"Analyze this payload: {text_col}: \"{row[text_col]}\""}
+                {
+                    "role": "user", 
+                    "content": f"Analyze this profile metadata item:\nID: {current_id}\nText: \"{text_payload}\""
+                }
             ],
             temperature=0.0
         )
+        
         try:
-            customer_id = row['customer_id'] if 'customer_id' in row else f"CUST_{_+1:06d}"
             analysis = json.loads(response.choices[0].message.content)
             for item in analysis.get('results', []):
-                item['customer_id'] = customer_id  # Ensure we have the customer_id in the output
+                # Lock the extracted analytics precisely back to the original file's ID
+                item['customer_id'] = current_id
+                item['raw_text'] = text_payload
                 analysis_results.append(item)
         except json.JSONDecodeError:
-            print(f"Warning: Failed to parse LLM response for customer_id {row['customer_id']}. Skipping this entry.")
-        
-    # Convert the results into a DataFrame and save to CSV
+            print(f"Warning: Failed to parse LLM response for ID {current_id}. Skipping.")
+
     if analysis_results:
         result_df = pd.DataFrame(analysis_results)
         result_df.to_csv(output_file, index=False)
-        print(f"Analysis complete! Processed feedback saved to '{output_file}'.")
-        print(tabulate(result_df.head(), headers='keys', tablefmt='psql'))
+        print(f"\nAnalysis complete! Processed feedback saved to '{output_file}'.")
+        print(tabulate(result_df, headers='keys', tablefmt='psql', showindex=False))
     else:
         print("No valid analysis results were generated.")
 
+
 if __name__ == "__main__":
-    file_path = "customer_feedback.csv"
+    # Make sure your file is placed inside a folder called 'data' next to this script
+    file_path = "data/scrape_facebook.csv" 
     analyze_feedback_with_schema(file_path)

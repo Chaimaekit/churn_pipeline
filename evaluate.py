@@ -1,9 +1,12 @@
-# telecom_churn/evaluate.py
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, classification_report, roc_curve, precision_recall_fscore_support
 import shap
 import matplotlib.pyplot as plt
+import os
+
+
+os.makedirs("output", exist_ok=True)
 
 def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_test, target_threshold=0.40):
     """
@@ -19,10 +22,8 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
         'Optimized CatBoost': cat_model
     }
     
-    # Dictionary to hold structured metrics for our exported tables/images
     report_data = []
     
-    # Initialize the curves canvas
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7))
     colors = {
         'Logistic Regression': '#7f8c8d',
@@ -35,16 +36,13 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
         probs = model.predict_proba(X_test)[:, 1]
         preds = (probs >= target_threshold).astype(int)
         
-        # Global Matrix Calculations
         roc_auc = roc_auc_score(y_test, probs)
         precision_labs, recall_labs, _ = precision_recall_curve(y_test, probs)
         pr_auc = auc(recall_labs, precision_labs)
         
-        # Calculate Threshold Specific Matrix (Class 1 Churn)
         prec, rec, f1, _ = precision_recall_fscore_support(y_test, preds, average='binary', pos_label=1)
         acc = (preds == y_test).mean()
         
-        # Append to our structural dictionary list
         report_data.append({
             'Model': name,
             'ROC-AUC': round(roc_auc, 4),
@@ -64,11 +62,8 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
         
     print("="*60)
     
-    # ----------------------------------------------------
-    # EXPORT ARTIFACT 1: Markdown Table File
-    # ----------------------------------------------------
     metrics_df = pd.DataFrame(report_data)
-    markdown_filename = "model_performance_report.md"
+    markdown_filename = "output/model_performance_report.md"
     
     with open(markdown_filename, "w") as f:
         f.write("# Moroccan Telecom Churn Prediction Pipeline Run\n\n")
@@ -76,10 +71,6 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
         f.write(metrics_df.to_markdown(index=False))
     print(f"[SUCCESS] Markdown comparison table saved to: '{markdown_filename}'")
     
-    # ----------------------------------------------------
-    # EXPORT ARTIFACT 2: Comparative Dashboard Image
-    # ----------------------------------------------------
-    # We isolate our tree-boosting algorithms for a focused operational bar-chart
     boosting_metrics = metrics_df[metrics_df['Model'].str.contains('XGBoost|LightGBM|CatBoost')]
     
     fig_bars, ax_bars = plt.subplots(figsize=(12, 6))
@@ -101,7 +92,6 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
     ax_bars.legend(loc='lower left', frameon=True, shadow=False)
     ax_bars.grid(axis='y', linestyle=':', alpha=0.6)
     
-    # Add clear text value labels on top of each bar
     for patch in ax_bars.patches:
         height = patch.get_height()
         if height > 0:
@@ -111,12 +101,11 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
                              ha='center', va='bottom', fontsize=8, fontweight='bold')
             
     plt.tight_layout()
-    bar_filename = "model_metrics_comparison.png"
+    bar_filename = "output/model_metrics_comparison.png"
     plt.savefig(bar_filename, dpi=300, bbox_inches='tight')
     print(f"[SUCCESS] Operational metric comparison dashboard saved to: '{bar_filename}'")
     plt.close()
 
-    # Style and Save standard ROC/PR Curves Canvas
     ax1.plot([0, 1], [0, 1], 'k--', alpha=0.5)
     ax1.set_title('Receiver Operating Characteristic (ROC) Curve', fontsize=12, fontweight='bold')
     ax1.grid(True, linestyle=':', alpha=0.6)
@@ -126,7 +115,7 @@ def run_performance_audit(lr_model, xgb_model, lgb_model, cat_model, X_test, y_t
     ax2.grid(True, linestyle=':', alpha=0.6)
     ax2.legend()
     
-    plt.savefig("model_comparison_curves.png", dpi=300, bbox_inches='tight')
+    plt.savefig("output/model_comparison_curves.png", dpi=300, bbox_inches='tight')
     plt.close()
 
 def compute_explainable_ai_layer(best_model, X_test, customer_idx=0):
@@ -142,7 +131,7 @@ def compute_explainable_ai_layer(best_model, X_test, customer_idx=0):
     plt.title("Champion Model Global Feature Importance (SHAP Impact Spectrum)", fontsize=14, fontweight='bold', pad=15)
     plt.tight_layout()
     
-    shap_filename = "champion_feature_importance.png"
+    shap_filename = "output/champion_feature_importance.png"
     plt.savefig(shap_filename, dpi=300, bbox_inches='tight')
     print(f"[SUCCESS] SHAP explainability graph saved to: '{shap_filename}'\n")
     plt.close()

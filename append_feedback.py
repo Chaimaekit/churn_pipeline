@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def append_feedback(train_path="train.csv", feedback_path="customer_feedback.csv", output_path="train_with_feedback.csv"):
+def append_feedback(train_path="data/train.csv", feedback_path="data/customer_feedback.csv", output_path="data/train_with_feedback.csv"):
     df_train = pd.read_csv(train_path)
     df_feedback = pd.read_csv(feedback_path)
 
@@ -23,6 +23,6 @@ def append_feedback(train_path="train.csv", feedback_path="customer_feedback.csv
 
 if __name__ == '__main__':
     result = append_feedback()
-    print(f"Merged feedback into train data: {len(result)} rows written to 'train_with_feedback.csv'.")
+    print(f"Merged feedback into train data: {len(result)} rows written to 'data/train_with_feedback.csv'.")
         
 

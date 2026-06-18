@@ -1,2 +1,6 @@
-.venv/
+catboost_info/
+output/
 .env
+__pycache__/
+*.pyc
+.venv/
