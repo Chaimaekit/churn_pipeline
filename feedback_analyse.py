@@ -10,21 +10,18 @@ os.makedirs("data", exist_ok=True)
 
 
 def analyze_feedback_with_schema(feedback_file, output_file="data/processed_feedback.csv"):
-    # Initialize Groq client
     groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
     
     if not os.path.exists(feedback_file):
         print(f"Error: Scraped file '{feedback_file}' not found.")
         return
 
-    # Read your local scraped file and select the top 20 rows
     review_df = pd.read_csv(feedback_file).head(20)
     analysis_results = []
     
     print(f"--> Ingesting {len(review_df)} reviews from scraped file for Darija analysis...")
     
     for idx, (_, row) in enumerate(review_df.iterrows()):
-        # 1. Correctly extract the comment text from your specific column structure
         if 'comment_text' in row and pd.notna(row['comment_text']):
             text_payload = str(row['comment_text'])
         elif 'text' in row and pd.notna(row['text']):
@@ -32,10 +29,8 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_feed
         else:
             continue
             
-        # 2. Extract the true numeric structural ID (e.g., 1572177951614269)
         current_id = str(row['id'])
         
-        # 3. Request LLM structured classification tuned for Moroccan Dialect
         response = groq.chat.completions.create(
             model="openai/gpt-oss-120b",
             response_format={"type": "json_object"},
@@ -75,7 +70,6 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_feed
         try:
             analysis = json.loads(response.choices[0].message.content)
             for item in analysis.get('results', []):
-                # Lock the extracted analytics precisely back to the original file's ID
                 item['customer_id'] = current_id
                 item['raw_text'] = text_payload
                 analysis_results.append(item)
@@ -92,6 +86,5 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_feed
 
 
 if __name__ == "__main__":
-    # Make sure your file is placed inside a folder called 'data' next to this script
     file_path = "data/scrape_facebook.csv" 
     analyze_feedback_with_schema(file_path)
