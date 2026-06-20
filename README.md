@@ -242,7 +242,7 @@ BLOCKED_USERNAMES = {
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### 1. Data Ingestion
 
