@@ -12,13 +12,25 @@ import json
 import hashlib
 from datetime import datetime
 
-
+# ── CONFIG ─────────────────────────────────────────────────────────────
 PAGE_NAME = "orangemaroc"
-MAX_POSTS = 10
+MAX_POSTS = 50
 CHROME_BINARY = r"C:\Users\chaim\Downloads\chrome-win\chrome.exe"
 MAX_RETRIES = 2
 
+# Blocked usernames — Facebook UI elements that get mistaken for comments
+BLOCKED_USERNAMES = {
+    "Follow", "Like", "Reply", "Share", "Comment", "Orange", "Meta AI",
+    "Groups", "Find friends", "Home", "Create", "Menu", "Notifications",
+    "Saved", "Memories", "Privacy", "Terms", "Advertising", "Ad choices",
+    "Cookies", "Sweet Pie", "Friends", "Reels", "Feeds", "Events",
+    "Ads Manager", "Play games", "For you", "Profile", "Watch",
+    "Marketplace", "Messenger", "Search", "Pages", "Settings",
+    "Help", "Log Out", "Create Post", "Live", "Gaming", "Fundraisers",
+    "Feed", "Marketplace", "Notifications", "Create", "Pages",
+}
 
+# ── SETUP ────────────────────────────────────────────────────────────────
 options = Options()
 options.binary_location = CHROME_BINARY
 options.add_argument("--no-sandbox")
@@ -39,7 +51,7 @@ driver.execute_cdp_cmd(
     {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
 )
 
-
+# ── LOGIN ────────────────────────────────────────────────────────────────
 driver.get("https://www.facebook.com/login")
 print("=" * 50)
 print("LOG IN MANUALLY in the browser window.")
@@ -47,8 +59,7 @@ print("Once you're fully logged in, press Enter here.")
 print("=" * 50)
 input("Press Enter after login...")
 
-
-
+# ── COLLECT POST URLS ────────────────────────────────────────────────────
 def collect_post_urls(page_name, limit):
     driver.get(f"https://www.facebook.com/{page_name}")
     print(f"\nLoading page: {page_name}")
@@ -86,8 +97,7 @@ def collect_post_urls(page_name, limit):
     print(f"Collected {len(result)} unique post URLs")
     return result
 
-
-
+# ── CLICK COMMENT BUTTON (for reels) ─────────────────────────────────────
 def click_comment_button():
     strategies = [
         "//div[@aria-label='Comment' and @role='button']",
@@ -109,10 +119,8 @@ def click_comment_button():
             continue
     return False
 
-
-
+# ── CLICK "VIEW MORE COMMENTS" (for posts) ─────────────────────────────
 def load_more_comments(max_clicks=20):
-    """Click 'View more comments' repeatedly on posts."""
     clicks = 0
     while clicks < max_clicks:
         clicked = False
@@ -136,11 +144,9 @@ def load_more_comments(max_clicks=20):
             break
     return clicks
 
-
-
+# ── EXTRACT COMMENTS ─────────────────────────────────────────────────────
 def extract_comments(post_url):
     time.sleep(3)
-
     comments = []
     seen = set()
 
@@ -159,20 +165,26 @@ def extract_comments(post_url):
             username = link.text.strip()
             if not username or len(username) < 2:
                 continue
-            if username in ["Follow", "Like", "Reply", "Share", "Comment", "Orange", "Meta AI",
-                            "Groups", "Find friends", "Home", "Create", "Menu", "Notifications",
-                            "Saved", "Memories", "Privacy", "Terms", "Advertising", "Ad choices",
-                            "Cookies", "Sweet Pie", "Friends", "Reels", "Feeds", "Events",
-                            "Ads Manager", "Play games", "For you", "Profile", "Watch",
-                            "Marketplace", "Messenger", "Search", "Pages", "Settings",
-                            "Help", "Log Out", "Create Post", "Live", "Gaming", "Fundraisers",
-                           ]:
+
+            # Skip blocked UI usernames
+            if username in BLOCKED_USERNAMES:
                 continue
+
+            # Skip short/timestamp-like usernames
+            if len(username) < 3:
+                continue
+            if re.match(r'^\d+[dhwmy]$', username):
+                continue
+            if re.match(r'^\d+$', username):
+                continue
+
+            # Skip URLs and UI paths
             if "facebook.com" in username.lower() or "privacy" in username.lower():
                 continue
             if "/" in username:
                 continue
 
+            # Walk up to find comment container
             container = link
             comment_text = ""
             for _ in range(6):
@@ -210,9 +222,11 @@ def extract_comments(post_url):
                 except:
                     break
 
-            if not comment_text or len(comment_text) < 3:
+            # Skip empty or too short comments
+            if not comment_text or len(comment_text.strip()) < 3:
                 continue
 
+            # Clean text
             comment_text = re.sub(r'\s*See translation\s*', ' ', comment_text)
             comment_text = re.sub(r'\s*Hide translation\s*', ' ', comment_text)
             comment_text = re.sub(r'\s*See more\s*', ' ', comment_text)
@@ -239,8 +253,7 @@ def extract_comments(post_url):
 
     return comments
 
-
-
+# ── MAIN ─────────────────────────────────────────────────────────────────
 all_comments = []
 skipped_posts = []
 
@@ -258,7 +271,7 @@ for i, url in enumerate(post_urls, 1):
         driver.get(url)
         time.sleep(4)
 
-        # REELS: need to click comment button
+        # REELS: click comment button
         if is_reel:
             clicked = False
             for attempt in range(1, MAX_RETRIES + 1):
@@ -276,13 +289,13 @@ for i, url in enumerate(post_urls, 1):
             if not clicked:
                 continue
 
-        # POSTS: comments are visible, just load more
+        # POSTS: load more comments
         elif is_post:
             print("Post detected — loading more comments...")
             clicks = load_more_comments(max_clicks=15)
             print(f"Clicked 'load more' {clicks} times")
 
-        # Extract comments
+        # Extract
         comments = extract_comments(url)
         all_comments.extend(comments)
         print(f"Extracted {len(comments)} comments")
