@@ -1,361 +1,323 @@
-import os, re, sys, json, time, random, logging, argparse, subprocess
-import pandas as pd
-from datetime import datetime
-from pathlib import Path
-from typing import List, Dict, Optional
-from dotenv import load_dotenv
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, NoSuchElementException
+import subprocess
+import time
+import re
+import json
+import hashlib
+from datetime import datetime
 
-load_dotenv()
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
-log = logging.getLogger(__name__)
-
+PAGE_NAME = "orangemaroc"
+MAX_POSTS = 10
 CHROME_BINARY = r"C:\Users\chaim\Downloads\chrome-win\chrome.exe"
-FB_EMAIL      = os.getenv("FB_EMAIL")
-FB_PASSWORD   = os.getenv("FB_PASSWORD")
+MAX_RETRIES = 2
 
-ANGER_KEYWORDS = [
-    "غالي","غالية","مشا","حيدوا","رجعو","رجع","واش كاين","امتا",
-    "كونيكسيون","مخدامش","مشكل","ضعيف","بطي","تفو","عيقتو",
-    "الله يعطيكم الإفلاس","حرام","سرقة","مزعج","خايب","نبغي نلغي",
-    "نبدل","انوي","اتصالات","مزبل","حشومة","سرقو",
-]
 
-def _has_anger(text): return any(kw in (text or "") for kw in ANGER_KEYWORDS)
-def _random_sleep(lo=1.2, hi=2.8): time.sleep(random.uniform(lo, hi))
+options = Options()
+options.binary_location = CHROME_BINARY
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument("--start-maximized")
+options.add_experimental_option("excludeSwitches", ["enable-automation"])
+options.add_experimental_option("useAutomationExtension", False)
 
-# ── detect chrome version ─────────────────────────────────────────────────────
-def get_chrome_version(binary_path: str) -> Optional[str]:
-    try:
-        r = subprocess.run([binary_path, "--version"], capture_output=True, text=True, timeout=10)
-        m = re.search(r"(\d+\.\d+\.\d+\.\d+)", r.stdout)
-        if m: return m.group(1)
-    except Exception: pass
-    # fallback: read manifest next to chrome.exe
-    for fname in ["manifest.json", "LAST_CHANGE"]:
-        p = Path(binary_path).parent / fname
-        if p.exists():
-            m = re.search(r"(\d+\.\d+\.\d+\.\d+)", p.read_text(errors="ignore"))
-            if m: return m.group(1)
-    return None
+service = Service()
+if hasattr(subprocess, 'CREATE_NO_WINDOW'):
+    service.creation_flags = subprocess.CREATE_NO_WINDOW
 
-# ── download matching chromedriver from CfT ───────────────────────────────────
-def _download_cft_chromedriver(chrome_version: str) -> str:
-    import urllib.request, zipfile
-    major = chrome_version.split(".")[0]
-    url   = "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json"
-    log.info("Fetching Chrome-for-Testing manifest...")
-    with urllib.request.urlopen(url, timeout=20) as r:
-        manifest = json.loads(r.read())
+driver = webdriver.Chrome(service=service, options=options)
 
-    matching = [
-        v for v in manifest["versions"]
-        if v["version"].startswith(f"{major}.")
-        and any(d["platform"] == "win64" for d in v.get("downloads", {}).get("chromedriver", []))
-    ]
-    if not matching:
-        raise RuntimeError(f"No CfT chromedriver for Chrome {major}")
+driver.execute_cdp_cmd(
+    "Page.addScriptToEvaluateOnNewDocument",
+    {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
+)
 
-    best    = matching[-1]
-    dl_url  = next(d["url"] for d in best["downloads"]["chromedriver"] if d["platform"] == "win64")
-    ver_str = best["version"]
-    log.info(f"Downloading chromedriver {ver_str}...")
 
-    cache   = Path.home() / ".wdm" / "cft" / ver_str
-    cache.mkdir(parents=True, exist_ok=True)
-    zip_p   = cache / "cd.zip"
-    exe_p   = cache / "chromedriver-win64" / "chromedriver.exe"
+driver.get("https://www.facebook.com/login")
+print("=" * 50)
+print("LOG IN MANUALLY in the browser window.")
+print("Once you're fully logged in, press Enter here.")
+print("=" * 50)
+input("Press Enter after login...")
 
-    if not exe_p.exists():
-        urllib.request.urlretrieve(dl_url, zip_p)
-        with zipfile.ZipFile(zip_p) as zf: zf.extractall(cache)
-        zip_p.unlink(missing_ok=True)
 
-    log.info(f"ChromeDriver ready: {exe_p}")
-    return str(exe_p)
 
-# ── build driver ──────────────────────────────────────────────────────────────
-def build_driver(headless: bool = False):
-    chrome_version = get_chrome_version(CHROME_BINARY)
-    major = chrome_version.split(".")[0] if chrome_version else None
-    log.info(f"Chrome version detected: {chrome_version or 'unknown'}")
+def collect_post_urls(page_name, limit):
+    driver.get(f"https://www.facebook.com/{page_name}")
+    print(f"\nLoading page: {page_name}")
+    time.sleep(5)
 
-    # ── Try undetected-chromedriver first ─────────────────────────────────────
-    try:
-        import undetected_chromedriver as uc
-        opts = uc.ChromeOptions()
-        opts.binary_location = CHROME_BINARY
-        opts.add_argument("--no-sandbox")
-        opts.add_argument("--disable-dev-shm-usage")
-        opts.add_argument("--lang=ar-MA")
-        opts.add_argument("--start-maximized")
-        if headless: opts.add_argument("--headless=new")
-        driver = uc.Chrome(options=opts, use_subprocess=True,
-                           version_main=int(major) if major else None)
-        log.info("Driver: undetected-chromedriver ✅")
-        return driver
-    except ImportError:
-        log.warning("undetected-chromedriver not found. Run:  pip install undetected-chromedriver")
+    urls = set()
+    scrolls = 0
+    max_scrolls = limit * 5
 
-    # ── Fallback: selenium + CfT-matched chromedriver ─────────────────────────
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.chrome.service import Service
-
-    opts = Options()
-    opts.binary_location = CHROME_BINARY
-    opts.add_argument("--no-sandbox")
-    opts.add_argument("--disable-dev-shm-usage")
-    opts.add_argument("--disable-blink-features=AutomationControlled")
-    opts.add_argument("--lang=ar-MA")
-    opts.add_argument("--start-maximized")
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
-    opts.add_experimental_option("useAutomationExtension", False)
-    if headless: opts.add_argument("--headless=new")
-
-    if chrome_version:
+    while len(urls) < limit and scrolls < max_scrolls:
         try:
-            # Try wdm with pinned version first
-            from webdriver_manager.chrome import ChromeDriverManager
-            driver_path = ChromeDriverManager(driver_version=chrome_version).install()
-            log.info(f"ChromeDriver from wdm (pinned {chrome_version})")
-        except Exception as e:
-            log.warning(f"wdm pinned failed ({e}) — downloading from CfT...")
-            driver_path = _download_cft_chromedriver(chrome_version)
-    else:
-        from webdriver_manager.chrome import ChromeDriverManager
-        driver_path = ChromeDriverManager().install()
+            anchors = driver.find_elements(
+                By.XPATH,
+                "//a[contains(@href,'/posts/') or contains(@href,'/reel/')]"
+            )
+            for a in anchors:
+                try:
+                    href = a.get_attribute("href") or ""
+                    if "facebook.com" in href and ("/posts/" in href or "/reel/" in href):
+                        clean = href.split("?")[0]
+                        urls.add(clean)
+                except StaleElementReferenceException:
+                    continue
+        except StaleElementReferenceException:
+            pass
 
-    driver = webdriver.Chrome(service=Service(driver_path), options=opts)
-    driver.execute_cdp_cmd(
-        "Page.addScriptToEvaluateOnNewDocument",
-        {"source": "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"}
-    )
-    log.info("Driver: Selenium + matched ChromeDriver ✅")
-    return driver
+        if len(urls) >= limit:
+            break
 
-# ── login ─────────────────────────────────────────────────────────────────────
-def login(driver, email: str, password: str) -> bool:
-    
+        driver.execute_script("window.scrollBy(0, 800);")
+        time.sleep(2)
+        scrolls += 1
 
-    COOKIE_FILE = "fb_cookies.json"
-    driver.get("https://www.facebook.com/")
-    _random_sleep(2, 3)
+    result = list(urls)[:limit]
+    print(f"Collected {len(result)} unique post URLs")
+    return result
 
-    if os.path.exists(COOKIE_FILE):
-        log.info("Trying saved cookies...")
-        for c in json.load(open(COOKIE_FILE)):
-            try: driver.add_cookie(c)
-            except: pass
-        driver.refresh(); _random_sleep(3, 4)
-        if "login" not in driver.current_url:
-            log.info("✅ Logged in via cookies"); return True
-        log.info("Cookies expired — fresh login")
 
-    try:
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "email")))
-        ef = driver.find_element(By.ID, "email")
-        ef.clear()
-        for ch in email: ef.send_keys(ch); time.sleep(random.uniform(0.05, 0.15))
-        _random_sleep(0.5, 1.0)
-        pf = driver.find_element(By.ID, "pass")
-        pf.clear()
-        for ch in password: pf.send_keys(ch); time.sleep(random.uniform(0.05, 0.15))
-        _random_sleep(0.5, 1.0)
-        driver.find_element(By.NAME, "login").click()
-        _random_sleep(5, 7)
 
-        if "login" in driver.current_url or "checkpoint" in driver.current_url:
-            log.warning("⚠️  Checkpoint detected — solve manually in browser.")
-            input("Press Enter once fully logged in...")
+def click_comment_button():
+    strategies = [
+        "//div[@aria-label='Comment' and @role='button']",
+        "//div[@aria-label='تعليق' and @role='button']",
+        "//div[contains(@class,'x1i10hfl') and @aria-label='Comment']",
+    ]
+    for xpath in strategies:
+        try:
+            btn = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, xpath))
+            )
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
+            time.sleep(0.5)
+            driver.execute_script("arguments[0].click();", btn)
+            return True
+        except TimeoutException:
+            continue
+        except Exception:
+            continue
+    return False
 
-        json.dump(driver.get_cookies(), open(COOKIE_FILE, "w"))
-        log.info("✅ Logged in and cookies saved"); return True
-    except Exception as e:
-        log.error(f"Login error: {e}")
-        input("Complete login manually, then press Enter...")
-        json.dump(driver.get_cookies(), open(COOKIE_FILE, "w"))
-        return True
 
-# ── scraper class ─────────────────────────────────────────────────────────────
-class FacebookCommentScraper:
-    def __init__(self, driver): self.driver = driver
 
-    def _scroll(self, n=3):
-        for _ in range(n):
-            self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight);")
-            _random_sleep(1.5, 2.5)
-
-    def _dismiss_popups(self):
-        from selenium.webdriver.common.by import By
-        for xp in ["//div[@aria-label='Close']","//div[@aria-label='إغلاق']",
-                   "//button[contains(.,'Allow all')]","//button[contains(.,'Only allow essential')]"]:
-            for el in self.driver.find_elements(By.XPATH, xp):
-                try: el.click(); _random_sleep(0.3, 0.6)
-                except: pass
-
-    def _load_more_comments(self, max_clicks=30):
-        from selenium.webdriver.common.by import By
-        XPATHS = [
+def load_more_comments(max_clicks=20):
+    """Click 'View more comments' repeatedly on posts."""
+    clicks = 0
+    while clicks < max_clicks:
+        clicked = False
+        xpaths = [
             "//div[@role='button' and contains(.,'View more comments')]",
             "//div[@role='button' and contains(.,'عرض المزيد من التعليقات')]",
             "//div[@role='button' and contains(.,'مشاهدة المزيد')]",
+            "//span[contains(text(),'View more comments')]/ancestor::div[@role='button']",
         ]
-        clicks = 0
-        while clicks < max_clicks:
-            clicked = False
-            for xp in XPATHS:
-                for btn in self.driver.find_elements(By.XPATH, xp):
-                    try:
-                        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
-                        _random_sleep(0.3, 0.6)
-                        self.driver.execute_script("arguments[0].click();", btn)
-                        _random_sleep(1.5, 2.5); clicked = True; clicks += 1
-                    except: pass
-            if not clicked: break
-        log.info(f"  Load-more clicks: {clicks}")
-
-    def _click_see_more(self):
-        from selenium.webdriver.common.by import By
-        for xp in ["//div[@role='button' and contains(.,'عرض المزيد')]",
-                   "//div[@role='button' and contains(.,'See more')]"]:
-            for btn in self.driver.find_elements(By.XPATH, xp):
-                try: self.driver.execute_script("arguments[0].click();", btn); _random_sleep(0.3, 0.6)
-                except: pass
-
-    def _extract_comments(self, post_url: str) -> List[Dict]:
-        from selenium.webdriver.common.by import By
-        seen, out = set(), []
-        for xp in [
-            "//div[@aria-label='Comment']//div[@dir='auto']",
-            "//div[contains(@class,'x1y1aw1k')]//div[@dir='auto']",
-            "//ul//li//div[@dir='auto']",
-            "//div[@role='article']//div[@dir='auto']",
-        ]:
-            for el in self.driver.find_elements(By.XPATH, xp):
+        for xp in xpaths:
+            for btn in driver.find_elements(By.XPATH, xp):
                 try:
-                    t = el.text.strip()
-                    if not t or t in seen or len(t) < 4: continue
-                    if any(s in t for s in ["Like","Reply","تعليق","إعجاب","أعجبني"]): continue
-                    seen.add(t)
-                    out.append({"post_url": post_url, "text": t,
-                                "is_anger": _has_anger(t),
-                                "scraped_at": datetime.utcnow().isoformat()})
+                    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
+                    time.sleep(0.5)
+                    driver.execute_script("arguments[0].click();", btn)
+                    time.sleep(2)
+                    clicked = True
+                    clicks += 1
                 except: pass
-        return out
+        if not clicked:
+            break
+    return clicks
 
-    def scrape_post(self, url: str, max_clicks=20) -> List[Dict]:
-        log.info(f"→ {url}")
-        self.driver.get(url); _random_sleep(3, 5)
-        self._dismiss_popups()
-        self._scroll(2)
-        self._load_more_comments(max_clicks)
-        self._click_see_more()
-        self._scroll(2)
-        comments = self._extract_comments(url)
-        log.info(f"  {len(comments)} comments extracted")
+
+
+def extract_comments(post_url):
+    time.sleep(3)
+
+    comments = []
+    seen = set()
+
+    try:
+        mount = driver.find_element(By.CSS_SELECTOR, "div[id^='mount_0_0_']")
+    except:
         return comments
 
-    def _collect_post_urls(self, limit: int) -> List[str]:
-        
-        urls, scrolls = set(), 0
-        while len(urls) < limit and scrolls < limit * 3:
-            try:
-                anchors = self.driver.find_elements(
-                    By.XPATH,
-                    "//a[contains(@href,'/posts/') or contains(@href,'/reel/')]"
-                )
-                for a in anchors:
-                    try:
-                        href = a.get_attribute("href") or ""
-                        if "facebook.com" in href and ("/posts/" in href or "/reel/" in href):
-                            clean = href.split("?")[0]
-                            urls.add(clean)
-                            if len(urls) >= limit:
-                                break
-                    except StaleElementReferenceException:
-                        continue  # element removed from DOM, skip it
-            except StaleElementReferenceException:
-                pass  # entire list invalidated, will re-query on next loop
-            
-            if len(urls) >= limit:
-                break
-                
-            self.driver.execute_script("window.scrollBy(0,800);")
-            _random_sleep(1.5, 2.5)
-            scrolls += 1
-            
-        return list(urls)[:limit]
+    user_links = mount.find_elements(
+        By.XPATH,
+        ".//a[contains(@href,'/')][@role='link' or not(@role)]"
+    )
 
-    def scrape_page(self, page: str, max_posts=20, max_clicks=50) -> List[Dict]:
-        self.driver.get(f"https://www.facebook.com/{page}"); _random_sleep(3, 5)
-        self._dismiss_popups()
-        urls = self._collect_post_urls(max_posts)
-        log.info(f"Collected {len(urls)} post URLs")
-        all_c = []
-        for i, url in enumerate(urls, 1):
-            log.info(f"[{i}/{len(urls)}]")
-            try: all_c.extend(self.scrape_post(url, max(5, max_clicks // 10)))
-            except Exception as e: log.warning(f"  Skipped: {e}")
-            _random_sleep(2, 4)
-        return all_c
+    for link in user_links:
+        try:
+            username = link.text.strip()
+            if not username or len(username) < 2:
+                continue
+            if username in ["Follow", "Like", "Reply", "Share", "Comment", "Orange", "Meta AI",
+                            "Groups", "Find friends", "Home", "Create", "Menu", "Notifications",
+                            "Saved", "Memories", "Privacy", "Terms", "Advertising", "Ad choices",
+                            "Cookies", "Sweet Pie", "Friends", "Reels", "Feeds", "Events",
+                            "Ads Manager", "Play games", "For you", "Profile", "Watch",
+                            "Marketplace", "Messenger", "Search", "Pages", "Settings",
+                            "Help", "Log Out", "Create Post", "Live", "Gaming", "Fundraisers",
+                           ]:
+                continue
+            if "facebook.com" in username.lower() or "privacy" in username.lower():
+                continue
+            if "/" in username:
+                continue
 
-# ── save / summary ────────────────────────────────────────────────────────────
-def save_results(comments, out_dir="data"):
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-    ts  = datetime.now().strftime("%Y%m%d_%H%M%S")
-    csv = f"{out_dir}/fb_comments_{ts}.csv"
-    jsn = f"{out_dir}/fb_comments_{ts}.json"
-    df  = pd.DataFrame(comments)
-    df.to_csv(csv, index=False, encoding="utf-8-sig")
-    json.dump(comments, open(jsn, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-    log.info(f"CSV  → {csv}  ({len(df)} rows)")
-    log.info(f"JSON → {jsn}")
+            container = link
+            comment_text = ""
+            for _ in range(6):
+                try:
+                    container = container.find_element(By.XPATH, "..")
+                    container_text = container.text.strip()
 
-def print_summary(comments):
-    if not comments: print("No comments."); return
-    df = pd.DataFrame(comments)
-    a  = df["is_anger"].sum()
-    print(f"\n{'='*50}\nSCRAPING SUMMARY\n  Total : {len(df)}\n  Anger : {a} ({a/len(df)*100:.1f}%)\n  Posts : {df['post_url'].nunique()}\n{'='*50}")
-    for t in df[df["is_anger"]]["text"].head(5): print(f"  • {t[:120]}")
+                    if username in container_text and len(container_text) > len(username) + 10:
+                        lines = container_text.split('\n')
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--page",     default="orangemaroc")
-    p.add_argument("--posts",    type=int, default=20)
-    p.add_argument("--comments", type=int, default=50)
-    p.add_argument("--url",      help="Single post URL")
-    p.add_argument("--email",    default=FB_EMAIL)
-    p.add_argument("--password", default=FB_PASSWORD)
-    p.add_argument("--headless", action="store_true")
-    p.add_argument("--out",      default="data")
-    p.add_argument("--no-login", action="store_true")
-    args = p.parse_args()
+                        comment_lines = []
+                        found_username = False
+                        for line in lines:
+                            line = line.strip()
+                            if not line:
+                                continue
+                            if line == username or username in line:
+                                found_username = True
+                                continue
+                            if found_username and line not in ["Like", "Reply", "أعجبني", "رد", "·", "Follow", ""]:
+                                if re.match(r'^\d+[dhwmy]$', line):
+                                    continue
+                                if re.match(r'^\d+$', line):
+                                    continue
+                                if "replied" in line.lower() or "replies" in line.lower():
+                                    continue
+                                if "See translation" in line and len(line) < 20:
+                                    continue
+                                comment_lines.append(line)
 
-    email, password = args.email, args.password
-    if not args.no_login and (not email or not password):
-        print("Set FB_EMAIL / FB_PASSWORD in .env  or pass --email / --password")
-        email    = input("Email: ").strip()
-        password = input("Password: ").strip()
+                        if comment_lines:
+                            comment_text = ' '.join(comment_lines)
+                            break
 
-    driver = build_driver(args.headless)
+                except:
+                    break
+
+            if not comment_text or len(comment_text) < 3:
+                continue
+
+            comment_text = re.sub(r'\s*See translation\s*', ' ', comment_text)
+            comment_text = re.sub(r'\s*Hide translation\s*', ' ', comment_text)
+            comment_text = re.sub(r'\s*See more\s*', ' ', comment_text)
+            comment_text = re.sub(r'\s*Edited\s*', ' ', comment_text)
+            comment_text = ' '.join(comment_text.split())
+
+            customer_id = hashlib.md5(username.encode('utf-8')).hexdigest()[:12]
+
+            dedup_key = f"{customer_id}:{comment_text[:50]}"
+            if dedup_key in seen:
+                continue
+            seen.add(dedup_key)
+
+            comments.append({
+                "customer_id": customer_id,
+                "post_url": post_url,
+                "username": username,
+                "text": comment_text,
+                "scraped_at": datetime.utcnow().isoformat()
+            })
+
+        except:
+            continue
+
+    return comments
+
+
+
+all_comments = []
+skipped_posts = []
+
+post_urls = collect_post_urls(PAGE_NAME, MAX_POSTS)
+
+for i, url in enumerate(post_urls, 1):
+    print(f"\n{'='*50}")
+    print(f"[{i}/{len(post_urls)}] Processing: {url}")
+    print(f"{'='*50}")
+
+    is_reel = "/reel/" in url
+    is_post = "/posts/" in url
+
     try:
-        if not args.no_login:
-            if not login(driver, email, password): sys.exit(1)
-        scraper  = FacebookCommentScraper(driver)
-        comments = (scraper.scrape_post(args.url, args.comments)
-                    if args.url else
-                    scraper.scrape_page(args.page, args.posts, args.comments))
-        if comments: save_results(comments, args.out); print_summary(comments)
-        else: log.warning("No comments collected.")
-    finally:
-        driver.quit()
+        driver.get(url)
+        time.sleep(4)
 
-if __name__ == "__main__":
-    main()
+        # REELS: need to click comment button
+        if is_reel:
+            clicked = False
+            for attempt in range(1, MAX_RETRIES + 1):
+                if click_comment_button():
+                    print("Comment button clicked.")
+                    clicked = True
+                    break
+                else:
+                    print(f"Attempt {attempt}/{MAX_RETRIES}: Comment button not found")
+                    if attempt < MAX_RETRIES:
+                        time.sleep(2)
+                    else:
+                        print(f"SKIPPING reel after {MAX_RETRIES} failed attempts")
+                        skipped_posts.append(url)
+            if not clicked:
+                continue
+
+        # POSTS: comments are visible, just load more
+        elif is_post:
+            print("Post detected — loading more comments...")
+            clicks = load_more_comments(max_clicks=15)
+            print(f"Clicked 'load more' {clicks} times")
+
+        # Extract comments
+        comments = extract_comments(url)
+        all_comments.extend(comments)
+        print(f"Extracted {len(comments)} comments")
+
+    except Exception as e:
+        print(f"ERROR processing post: {e}")
+        continue
+
+    time.sleep(2)
+
+# ── SAVE RESULTS ─────────────────────────────────────────────────────────
+print(f"\n{'='*50}")
+print(f"SCRAPING COMPLETE")
+print(f"Total posts processed: {len(post_urls) - len(skipped_posts)}")
+print(f"Skipped posts: {len(skipped_posts)}")
+print(f"Total comments: {len(all_comments)}")
+print(f"{'='*50}")
+
+if skipped_posts:
+    print("\nSkipped URLs:")
+    for u in skipped_posts:
+        print(f"  • {u}")
+
+if all_comments:
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"data/comments_{ts}.json"
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(all_comments, f, ensure_ascii=False, indent=2)
+    print(f"\nSaved to: {filename}")
+
+    print("\nSample comments:")
+    for c in all_comments[:5]:
+        print(f"\n  customer_id: {c['customer_id']}")
+        print(f"  username: {c['username']}")
+        print(f"  text: {c['text'][:100]}")
+
+input("\nPress Enter to close browser...")
+driver.quit()
