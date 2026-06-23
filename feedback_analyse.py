@@ -4,9 +4,14 @@ import pandas as pd
 from groq import Groq
 from dotenv import load_dotenv
 from tabulate import tabulate
+from supabase import create_client
 
 load_dotenv()
 os.makedirs("data", exist_ok=True)
+
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_KEY")
+supabase = create_client(supabase_url, supabase_key)
 
 
 def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comments.csv"):

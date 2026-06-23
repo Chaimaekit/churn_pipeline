@@ -7,10 +7,11 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Dict
 from dotenv import load_dotenv
+import json
+import glob
 
 load_dotenv()
 
-# Try supabase-py, fallback to psycopg2
 try:
     from supabase import create_client, Client
     HAS_SUPABASE = True
@@ -21,39 +22,24 @@ except ImportError:
 
 
 class SupabaseDB:
-    """
-    Unified database interface for the churn pipeline.
-    Uses Supabase (PostgreSQL) instead of CSV files.
-    """
-
     def __init__(self):
         self.url = os.getenv("SUPABASE_URL")
         self.key = os.getenv("SUPABASE_KEY")
-        self.password = os.getenv("SUPABASE_PASSWORD")
-        self.host = os.getenv("SUPABASE_HOST")
-        self.db = os.getenv("SUPABASE_DB", "postgres")
-        self.user = os.getenv("SUPABASE_USER", "postgres")
-        self.port = int(os.getenv("SUPABASE_PORT", "5432"))
-
+        
+        self.db_uri = os.getenv("SUPABASE_CONNECTION_STRING") 
+        
         self.client: Optional[Client] = None
         self._connect()
 
     def _connect(self):
-        """Initialize Supabase client or psycopg2 fallback."""
         if HAS_SUPABASE and self.url and self.key:
             self.client = create_client(self.url, self.key)
             print("[INFO] Connected to Supabase via REST API")
         else:
-            # Fallback: direct PostgreSQL connection
             import psycopg2
-            self.conn = psycopg2.connect(
-                host=self.host,
-                database=self.db,
-                user=self.user,
-                password=self.password,
-                port=self.port
-            )
-            print("[INFO] Connected to Supabase via psycopg2")
+            self.conn = psycopg2.connect(self.db_uri)
+            print("[INFO] Connected to Supabase via psycopg2 URI")
+
 
     # ============================================
     # SCRAPED COMMENTS (replaces JSON/CSV)
@@ -297,48 +283,84 @@ class SupabaseDB:
 # MIGRATION: CSV → Supabase
 # ============================================
 
+
 def migrate_csv_to_supabase():
     """
-    One-time migration script.
-    Run this after setting up Supabase tables to move existing CSV data.
+    One-time migration script following Option A.
+    Safely runs multiple times without creating duplicates by using upsert mechanics.
     """
     db = SupabaseDB()
 
-    # 1. Migrate subscribers
-    import glob
-    for csv_file in glob.glob("data/*subscriber*.csv") + glob.glob("data/train*.csv") + glob.glob("data/test*.csv"):
-        if os.path.exists(csv_file):
-            print(f"Migrating {csv_file}...")
-            df = pd.read_csv(csv_file)
-            db.insert_subscribers(df)
+    # 1. Exact columns allowed in the public.subscribers database table
+    allowed_db_columns = [
+        "customer_id", "state", "account_length", "area_code", "international_plan",
+        "voice_mail_plan", "number_vmail_messages", "total_day_minutes", "total_day_calls",
+        "total_day_charge", "total_eve_minutes", "total_eve_calls", "total_eve_charge",
+        "total_night_minutes", "total_night_calls", "total_night_charge", "total_intl_minutes",
+        "total_intl_calls", "total_intl_charge", "customer_service_calls", "churn",
+        "feedback_text", "feedback_category", "sentiment", "complaint_intensity"
+    ]
 
-    # 2. Migrate processed feedback
-    feedback_file = "data/processed_feedback.csv"
+    # 2. Migrate only the test subscriber dataset safely
+    import glob
+    for csv_file in glob.glob("data/test*.csv"):
+        if os.path.exists(csv_file):
+            print(f"Processing subscriber records from: {csv_file}...")
+            df = pd.read_csv(csv_file)
+            
+            # Programmatic column filtering
+            columns_to_keep = [col for col in allowed_db_columns if col in df.columns]
+            df_cleaned = df[columns_to_keep].copy()
+            
+            if "churn" in df_cleaned.columns:
+                df_cleaned["churn"] = df_cleaned["churn"].astype(int)
+            
+            # --- SAFE UPSERT CONVERSION ---
+            # Instead of standard insert(), we perform an upsert on the unique key 'customer_id'
+            records = df_cleaned.to_dict(orient="records")
+            try:
+                # This instructs Supabase to resolve clashes on customer_id safely
+                db.client.table("subscribers").upsert(records, on_conflict="customer_id").execute()
+                print(f"[INFO] Successfully synced/updated {len(records)} subscribers.")
+            except Exception as e:
+                print(f"[WARNING] Native upsert failed, attempting fallback batch processing: {e}")
+                # Fallback to standard insert method if your setup doesn't support basic upsert strings
+                db.insert_subscribers(df_cleaned)
+
+    # 3. Migrate processed feedback comments
+    feedback_file = "data/processed_comments.csv"
     if os.path.exists(feedback_file):
-        print(f"Migrating {feedback_file}...")
+        print(f"Migrating processed sentiment records from: {feedback_file}...")
         df = pd.read_csv(feedback_file)
         records = df.to_dict("records")
-        db.insert_processed_feedback(records)
-
-    # 3. Migrate scraped comments (JSON)
-    import glob
-    for json_file in glob.glob("data/comments_*.json"):
-        print(f"Migrating {json_file}...")
-        with open(json_file, "r", encoding="utf-8") as f:
-            comments = json.load(f)
-        db.insert_scraped_comments(comments)
+        
+        # Using upsert over insert to prevent duplication of identical parsed feedback texts
+        try:
+            db.client.table("processed_feedback").upsert(records).execute()
+            print(f"[INFO] Successfully migrated feedback text matrix rows.")
+        except Exception as e:
+            print(f"[INFO] Attempting standard insertion for feedback: {e}")
+            db.insert_processed_feedback(records)
 
     db.close()
-    print("✅ Migration complete!")
+    print("✅ Safe Dynamic Migration execution sequence completed!")
 
 
 if __name__ == "__main__":
-    # Test connection
+    # 1. Test connection
     db = SupabaseDB()
-
-    # Test: get reputation
-    rep = db.get_reputation_summary()
-    print("\nReputation Summary:")
-    print(rep)
+    
+    # 2. Run the migration to populate the cloud tables
+    print("\n[MIGRATION] Starting data migration to Supabase...")
+    migrate_csv_to_supabase()
+    
+    # 3. Now test the reputation calculation after data is inserted
+    print("\n[TEST] Fetching updated Reputation Summary...")
+    try:
+        rep = db.get_reputation_summary()
+        print("Reputation Summary Result:")
+        print(rep)
+    except Exception as e:
+        print(f"Error checking summary: {e}")
 
     db.close()
