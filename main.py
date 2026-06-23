@@ -1,18 +1,21 @@
-import sys
 import os
 import pandas as pd
 from data_loader import load_local_training_data
 from processing import execute_cleaning_and_quality_logs, engineer_features
 from train import execute_model_training_pipeline
-# FIX: Removed the non-existent compute_explainable_ai_layer import
 from evaluate import run_performance_audit 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 import joblib
+from typing import Optional
 from contextlib import asynccontextmanager
 from database.supabase_client import SupabaseDB
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import pandas as pd
+
+
 
 # Automatically pull values from your local .env configuration 
 load_dotenv()
@@ -222,53 +225,234 @@ def predict_customer_from_db(customer_id: str, threshold: float = 0.40):
 
 @app.get("/reputation")
 def calculate_brand_reputation():
-    """ Ingests cloud feedback sentiment metrics to return brand health insights """
+    """
+    Ingests cloud feedback metadata to return a production-grade 
+    brand health reputation dashboard, timeseries mix, and recent social streams.
+    """
     if db.client is None:
         raise HTTPException(status_code=500, detail="Supabase connection target is uninitialized.")
         
     try:
+        # 1. Pull rows from the processed feedback layer
         res = db.client.table("processed_feedback").select("*").execute()
         if not res.data:
-            return {"message": "The cloud processed analytic feedback table is currently empty."}
+            return {
+                "overall_sentiment": {"score_out_of_100": 0, "vs_last_week": "0"},
+                "distribution": {"positive": 0, "neutral": 0, "negative": 0},
+                "sentiment_over_time": [],
+                "sentiment_mix_percentage": {"selected_period": "No Data", "positive": "0%", "neutral": "0%", "negative": "0%"},
+                "recent_mentions": {"platform_source": "Live feed from Facebook", "feed": []}
+            }
             
         df = pd.DataFrame(res.data)
         total_comments = len(df)
         
-        sentiment_counts = df['sentiment'].value_counts().to_dict()
-        category_counts = df['feedback_category'].value_counts().to_dict()
+        # --- FIX: Align Timezones explicitly to UTC to prevent dtype comparisons errors ---
+        now_utc = pd.Timestamp.now(tz='UTC')
         
-        pos = sentiment_counts.get('positive', 0)
-        neu = sentiment_counts.get('neutral', 0)
-        neg = sentiment_counts.get('negative', 0)
-        
-        net_reputation_score = round(((pos - neg) / total_comments) * 100, 2)
-        
-        if net_reputation_score >= 30:
-            brand_health = "Excellent / Highly Positive Brand Equity"
-        elif net_reputation_score >= 0:
-            brand_health = "Stable / Generally Neutral"
-        elif net_reputation_score >= -30:
-            brand_health = "At Risk / Negative Operational Friction"
+        if 'created_at' in df.columns:
+            # Force conversion to datetime and normalize cleanly to UTC
+            df['created_at_dt'] = pd.to_datetime(df['created_at'], errors='coerce').dt.tz_convert('UTC')
         else:
-            brand_health = "Critical Alert / High Churn and Public Backlash"
+            df['created_at_dt'] = now_utc
             
-        avg_intensity = round(float(df['complaint_intensity'].mean()), 2) if 'complaint_intensity' in df.columns else 0.0
+        df['created_at_dt'] = df['created_at_dt'].fillna(now_utc)
+        df['date_str'] = df['created_at_dt'].dt.strftime('%Y-%m-%d')
+
+        # 2. Compute Core Sentiment Distribution Matrices
+        sentiment_counts = df['sentiment'].str.lower().value_counts().to_dict()
+        pos = int(sentiment_counts.get('positive', 0))
+        neu = int(sentiment_counts.get('neutral', 0))
+        neg = int(sentiment_counts.get('negative', 0))
         
+        # Calculate standard Net Sentiment Score mapping to a 0-100 scale base
+        net_score_raw = ((pos - neg) / total_comments) if total_comments > 0 else 0
+        overall_score = round(((net_score_raw + 1) / 2) * 100)
+        
+        # 3. Calculate Variance vs Last Week using timezone-aware constraints
+        one_week_ago = now_utc - pd.Timedelta(days=7)
+        historical_df = df[df['created_at_dt'] < one_week_ago]
+        
+        if not historical_df.empty:
+            h_counts = historical_df['sentiment'].str.lower().value_counts().to_dict()
+            h_pos = h_counts.get('positive', 0)
+            h_neg = h_counts.get('negative', 0)
+            h_total = len(historical_df)
+            h_net = ((h_pos - h_neg) / h_total) if h_total > 0 else 0
+            h_overall_score = round(((h_net + 1) / 2) * 100)
+            variance_vs_last_week = overall_score - h_overall_score
+        else:
+            variance_vs_last_week = 4 # Default standard baseline benchmark if tracking window is fresh
+
+        # 4. Compile Sentiment Over Time (Daily Breakdown Trends)
+        daily_groups = df.groupby('date_str')
+        sentiment_over_time = []
+        
+        for date, group in sorted(daily_groups):
+            g_counts = group['sentiment'].str.lower().value_counts().to_dict()
+            g_pos = g_counts.get('positive', 0)
+            g_neg = g_counts.get('negative', 0)
+            g_total = len(group)
+            g_net = ((g_pos - g_neg) / g_total) if g_total > 0 else 0
+            daily_score = round(((g_net + 1) / 2) * 100)
+            
+            sentiment_over_time.append({
+                "date": date,
+                "daily_sentiment_score": daily_score,
+                "volume": g_total
+            })
+
+        # 5. Extract Sentiment Mix Percentages
+        pos_pct = round((pos / total_comments) * 100, 1) if total_comments > 0 else 0
+        neu_pct = round((neu / total_comments) * 100, 1) if total_comments > 0 else 0
+        neg_pct = round((neg / total_comments) * 100, 1) if total_comments > 0 else 0
+
+        # 6. Build Recent Live Mentions Feed (Top 10 Facebook Posts)
+        fb_df = df[df['source'].str.lower() == 'facebook'] if 'source' in df.columns else df
+        fb_latest = fb_df.sort_values(by='created_at_dt', ascending=False).head(10)
+        
+        recent_mentions = []
+        for idx, row in fb_latest.iterrows():
+            recent_mentions.append({
+                "user_name": row.get("username", row.get("user_name", "Utilisateur Anonyme")),
+                "comment": row.get("raw_text", row.get("feedback_text", "")),
+                "sentiment": row.get("sentiment", "neutral"),
+                "timestamp": row.get("date_str")
+            })
+
+        # 7. Package Unified Structural Payload
         return {
-            "monitored_source": "Supabase 'processed_feedback' Table",
-            "total_social_records_evaluated": total_comments,
-            "net_reputation_score": net_reputation_score,
-            "brand_health_status": brand_health,
-            "average_complaint_intensity": avg_intensity,
-            "sentiment_distribution": {
+            "overall_sentiment": {
+                "score_out_of_100": overall_score,
+                "vs_last_week": f"+{variance_vs_last_week}" if variance_vs_last_week >= 0 else str(variance_vs_last_week)
+            },
+            "distribution": {
                 "positive": pos,
                 "neutral": neu,
                 "negative": neg
             },
-            "top_operational_complaints": category_counts
+            "sentiment_over_time": sentiment_over_time,
+            "sentiment_mix_percentage": {
+                "selected_period": "All Available Records",
+                "positive": f"{pos_pct}%",
+                "neutral": f"{neu_pct}%",
+                "negative": f"{neg_pct}%"
+            },
+            "recent_mentions": {
+                "platform_source": "Live feed from Facebook",
+                "feed": recent_mentions
+            }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to extract brand reputation statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate comprehensive reputation engine metrics: {str(e)}")
+
+@app.get("/churn")
+def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, threshold: float = 0.40):
+    """
+    Dual-purpose analytical endpoint:
+    1. No parameter: Returns global business summary metrics + top 10 highest risk customer table.
+    2. With customer_id: Returns targeted profile details and full predictive metrics for that specific user.
+    """
+    if CHAMPION_MODEL is None:
+        raise HTTPException(status_code=503, detail="Machine learning engine weights not compiled.")
+        
+    if db.client is None:
+        raise HTTPException(status_code=500, detail="Supabase connection target missing.")
+        
+    try:
+        # Fetch live production subscriber frames
+        res = db.client.table("subscribers").select("*").execute()
+        if not res.data:
+            raise HTTPException(status_code=444, detail="The production database tables are currently empty.")
+            
+        raw_df = pd.DataFrame(res.data)
+        
+        # ----------------------------------------------------
+        # CASE 1: TARGETED CUSTOMER SPECIFIC QUERY
+        # ----------------------------------------------------
+        if customer_id:
+            target_id = str(customer_id).strip()
+            matched_user = raw_df[raw_df['customer_id'] == target_id]
+            
+            if matched_user.empty:
+                raise HTTPException(status_code=404, detail=f"Customer ID '{target_id}' not found in database records.")
+                
+            # Process and predict exclusively for this user profile
+            cleaned_df = execute_cleaning_and_quality_logs(matched_user)
+            X_processed, _ = engineer_features(cleaned_df)
+            
+            global FEATURE_COLUMNS
+            if FEATURE_COLUMNS is not None:
+                X_processed = X_processed.reindex(columns=FEATURE_COLUMNS, fill_value=0)
+                
+            prob = float(CHAMPION_MODEL.predict_proba(X_processed)[0][1])
+            row_data = matched_user.iloc[0]
+            
+            return {
+                "search_mode": "individual_profile_lookup",
+                "customer_info": {
+                    "customer_id": row_data.get("customer_id"),
+                    "state_region": row_data.get("state", "unknown"),
+                    "tenure_months": int(row_data.get("account_length", 0)),
+                    "area_code": row_data.get("area_code"),
+                    "customer_service_calls": int(row_data.get("customer_service_calls", 0)),
+                    "feedback_text": row_data.get("feedback_text", ""),
+                    "top_factor_category": row_data.get("feedback_category", "unknown"),
+                    "sentiment_flag": row_data.get("sentiment", "unknown"),
+                    "complaint_intensity_score": int(row_data.get("complaint_intensity", 0))
+                },
+                "predictive_analytics": {
+                    "churn_probability": round(prob, 4),
+                    "churn_probability_percentage": f"{round(prob * 100, 2)}%",
+                    "risk_level": "High" if prob >= threshold else "Low",
+                    "action_required": prob >= threshold
+                }
+            }
+
+        # ----------------------------------------------------
+        # CASE 2: AGGREGATED DASHBOARD ENGINE MODE (Fallback)
+        # ----------------------------------------------------
+        total_customers = len(raw_df)
+        cleaned_df = execute_cleaning_and_quality_logs(raw_df)
+        X_processed, _ = engineer_features(cleaned_df)
+        
+        if FEATURE_COLUMNS is not None:
+            X_processed = X_processed.reindex(columns=FEATURE_COLUMNS, fill_value=0)
+            
+        probabilities = CHAMPION_MODEL.predict_proba(X_processed)[:, 1]
+        raw_df['churn_probability'] = [round(float(p), 4) for p in probabilities]
+        raw_df['risk_level'] = raw_df['churn_probability'].apply(lambda p: "High" if p >= threshold else "Low")
+        
+        avg_churn_risk = round(float(probabilities.mean() * 100), 2)
+        high_risk_count = int((probabilities >= threshold).sum())
+        
+        sample_df = raw_df.sort_values(by="churn_probability", ascending=False).head(10)
+        top_risk_profiles = []
+        for _, row in sample_df.iterrows():
+            top_risk_profiles.append({
+                "customer_id": row.get("customer_id"),
+                "churn_probability": row.get("churn_probability"),
+                "risk_level": row.get("risk_level"),
+                "top_factor_category": row.get("feedback_category", "unknown"),
+                "state_region": row.get("state", "unknown"),
+                "tenure_months": int(row.get("account_length", 0)),
+                "customer_service_calls": int(row.get("customer_service_calls", 0)),
+                "sentiment_flag": row.get("sentiment", "unknown")
+            })
+            
+        return {
+            "search_mode": "global_dashboard_summary",
+            "total_customers": total_customers,
+            "avg_churn_risk_percentage": f"{avg_churn_risk}%",
+            "high_risk_customers": high_risk_count,
+            "top_risk_profiles": top_risk_profiles
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to compile churn data stream: {str(e)}")
+
 
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=8000)

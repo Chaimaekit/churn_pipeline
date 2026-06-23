@@ -48,15 +48,11 @@ class SupabaseDB:
     def insert_scraped_comments(self, comments: List[Dict]) -> bool:
         """
         Insert scraped Facebook comments from scrape_facebook.py output.
-
-        Args:
-            comments: List of dicts with keys: customer_id, post_url, username, text, scraped_at
         """
         if not comments:
             return False
 
         if self.client:
-            # Supabase REST API
             data = [
                 {
                     "customer_id": c["customer_id"],
@@ -71,7 +67,6 @@ class SupabaseDB:
             print(f"[INFO] Inserted {len(data)} scraped comments")
             return True
         else:
-            # psycopg2 batch insert
             cur = self.conn.cursor()
             cur.executemany(
                 """
@@ -102,42 +97,49 @@ class SupabaseDB:
     def insert_processed_feedback(self, feedback_items: List[Dict]) -> bool:
         """
         Insert LLM-analyzed feedback from feedback_analyse.py.
-
-        Args:
-            feedback_items: List of dicts with keys: customer_id, feedback_category, 
-                           sentiment, complaint_intensity, raw_text
+        Safely filters duplicate matching constraints out of the payload batch to avoid loops.
         """
         if not feedback_items:
             return False
 
         if self.client:
-            data = [
-                {
-                    "customer_id": f["customer_id"],
-                    "feedback_category": f["feedback_category"],
-                    "sentiment": f["sentiment"],
-                    "complaint_intensity": f["complaint_intensity"],
-                    "raw_text": f["raw_text"]
-                }
-                for f in feedback_items
-            ]
-            response = self.client.table("processed_feedback").insert(data).execute()
-            print(f"[INFO] Inserted {len(data)} processed feedback records")
+            # --- FIX: In-memory batch deduplication for REST requests ---
+            seen = set()
+            data = []
+            for f in feedback_items:
+                unique_key = (str(f["customer_id"]), str(f["raw_text"]))
+                if unique_key not in seen:
+                    seen.add(unique_key)
+                    data.append({
+                        "customer_id": f["customer_id"],
+                        "username": f.get("username", "Anonymous User"),
+                        "feedback_category": f["feedback_category"],
+                        "sentiment": f["sentiment"],
+                        "complaint_intensity": f["complaint_intensity"],
+                        "raw_text": f["raw_text"],
+                        "source": "Facebook"
+                    })
+            
+            response = self.client.table("processed_feedback").upsert(data, on_conflict="customer_id,raw_text").execute()
+            print(f"[INFO] Processed {len(data)} distinct feedback records into Supabase.")
             return True
         else:
+            # psycopg2 batch insert fallback path
             cur = self.conn.cursor()
             cur.executemany(
                 """
                 INSERT INTO processed_feedback 
-                (customer_id, feedback_category, sentiment, complaint_intensity, raw_text)
-                VALUES (%(customer_id)s, %(feedback_category)s, %(sentiment)s, 
-                        %(complaint_intensity)s, %(raw_text)s)
+                (customer_id, username, feedback_category, sentiment, complaint_intensity, raw_text, source)
+                VALUES (%(customer_id)s, %(username)s, %(feedback_category)s, %(sentiment)s, 
+                        %(complaint_intensity)s, %(raw_text)s, 'Facebook')
+                ON CONFLICT (customer_id, raw_text) DO NOTHING
                 """,
                 feedback_items
             )
             self.conn.commit()
-            print(f"[INFO] Inserted {len(feedback_items)} processed feedback records")
+            print(f"[INFO] Inserted/Processed feedback items via psycopg2 safely.")
             return True
+
 
     def get_processed_feedback(self) -> pd.DataFrame:
         """Retrieve all processed feedback for /reputation API."""
@@ -156,7 +158,6 @@ class SupabaseDB:
         records = df.to_dict("records")
 
         if self.client:
-            # Supabase has 1000 row limit per insert, batch if needed
             BATCH_SIZE = 500
             for i in range(0, len(records), BATCH_SIZE):
                 batch = records[i:i+BATCH_SIZE]
@@ -164,7 +165,6 @@ class SupabaseDB:
             print(f"[INFO] Inserted {len(records)} subscribers")
             return True
         else:
-            # Use COPY for fast bulk insert
             from io import StringIO
             buffer = StringIO()
             df.to_csv(buffer, index=False, header=False)
@@ -191,7 +191,7 @@ class SupabaseDB:
             return pd.read_sql(query, self.conn)
 
     # ============================================
-    # PREDICTIONS (new — replaces in-memory results)
+    # PREDICTIONS 
     # ============================================
 
     def insert_prediction(self, customer_id: str, probability: float, 
@@ -228,32 +228,26 @@ class SupabaseDB:
         ORDER BY p.churn_probability DESC
         """
         if self.client:
-            # Use RPC for complex joins
             response = self.client.rpc("get_high_risk_customers").execute()
             return pd.DataFrame(response.data)
         else:
             return pd.read_sql(query, self.conn)
 
     # ============================================
-    # REPUTATION (replaces processed_feedback.csv for /reputation API)
+    # REPUTATION 
     # ============================================
 
     def get_reputation_summary(self) -> Dict:
-        """
-        Get brand reputation KPIs for /reputation endpoint.
-        Uses the PostgreSQL function for efficiency.
-        """
         if self.client:
             response = self.client.rpc("get_reputation_summary").execute()
             return response.data
         else:
-            cur = self.conn.cursor()
+            cur = self.conn.conn.cursor()
             cur.execute("SELECT get_reputation_summary()")
             result = cur.fetchone()[0]
             return result
 
     def get_reputation_snapshot(self, date: Optional[str] = None) -> pd.DataFrame:
-        """Get historical reputation snapshot."""
         query = "SELECT * FROM reputation_snapshots"
         if date:
             query += f" WHERE snapshot_date = '{date}'"
@@ -268,12 +262,7 @@ class SupabaseDB:
         else:
             return pd.read_sql(query, self.conn)
 
-    # ============================================
-    # UTILITY
-    # ============================================
-
     def close(self):
-        """Close database connection."""
         if not self.client and hasattr(self, "conn"):
             self.conn.close()
             print("[INFO] Database connection closed")
@@ -283,15 +272,15 @@ class SupabaseDB:
 # MIGRATION: CSV → Supabase
 # ============================================
 
-
 def migrate_csv_to_supabase():
     """
-    One-time migration script following Option A.
-    Safely runs multiple times without creating duplicates by using upsert mechanics.
+    One-time migration script.
+    Safely runs multiple times without creating duplicates using strict composite constraint upserts
+    and pre-insertion batch deduplication.
     """
     db = SupabaseDB()
 
-    # 1. Exact columns allowed in the public.subscribers database table
+    # 1. Migrate only the test subscriber dataset safely
     allowed_db_columns = [
         "customer_id", "state", "account_length", "area_code", "international_plan",
         "voice_mail_plan", "number_vmail_messages", "total_day_minutes", "total_day_calls",
@@ -301,66 +290,59 @@ def migrate_csv_to_supabase():
         "feedback_text", "feedback_category", "sentiment", "complaint_intensity"
     ]
 
-    # 2. Migrate only the test subscriber dataset safely
-    import glob
     for csv_file in glob.glob("data/test*.csv"):
         if os.path.exists(csv_file):
             print(f"Processing subscriber records from: {csv_file}...")
             df = pd.read_csv(csv_file)
-            
-            # Programmatic column filtering
             columns_to_keep = [col for col in allowed_db_columns if col in df.columns]
             df_cleaned = df[columns_to_keep].copy()
             
             if "churn" in df_cleaned.columns:
                 df_cleaned["churn"] = df_cleaned["churn"].astype(int)
             
-            # --- SAFE UPSERT CONVERSION ---
-            # Instead of standard insert(), we perform an upsert on the unique key 'customer_id'
             records = df_cleaned.to_dict(orient="records")
             try:
-                # This instructs Supabase to resolve clashes on customer_id safely
                 db.client.table("subscribers").upsert(records, on_conflict="customer_id").execute()
                 print(f"[INFO] Successfully synced/updated {len(records)} subscribers.")
             except Exception as e:
-                print(f"[WARNING] Native upsert failed, attempting fallback batch processing: {e}")
-                # Fallback to standard insert method if your setup doesn't support basic upsert strings
+                print(f"[WARNING] Native upsert failed, using fallback batch insert: {e}")
                 db.insert_subscribers(df_cleaned)
 
-    # 3. Migrate processed feedback comments
-    feedback_file = "data/processed_comments.csv"
+    # 2. Migrate processed feedback comments
+    feedback_file = "data/processed_comments_v2.csv"
     if os.path.exists(feedback_file):
         print(f"Migrating processed sentiment records from: {feedback_file}...")
         df = pd.read_csv(feedback_file)
-        records = df.to_dict("records")
         
-        # Using upsert over insert to prevent duplication of identical parsed feedback texts
+        # --- FIX: Drop duplicate rows within the CSV itself based on our unique constraint ---
+        df = df.drop_duplicates(subset=["customer_id", "raw_text"], keep="last")
+        
+        # Format explicitly into what the database table expects
+        records = []
+        for _, row in df.iterrows():
+            records.append({
+                "customer_id": str(row["customer_id"]),
+                "username": str(row.get("username", "Anonymous User")).strip(),
+                "feedback_category": str(row["feedback_category"]),
+                "sentiment": str(row["sentiment"]),
+                "complaint_intensity": int(row["complaint_intensity"]),
+                "raw_text": str(row["raw_text"]),
+                "source": "Facebook"
+            })
+        
         try:
-            db.client.table("processed_feedback").upsert(records).execute()
-            print(f"[INFO] Successfully migrated feedback text matrix rows.")
+            # Target the duplicate constraint rule on customer + comment text combo
+            db.client.table("processed_feedback").upsert(records, on_conflict="customer_id,raw_text").execute()
+            print(f"[INFO] Successfully migrated {len(records)} feedback text rows without duplication.")
         except Exception as e:
-            print(f"[INFO] Attempting standard insertion for feedback: {e}")
+            print(f"[INFO] Falling back to standard check insertion strategy due to: {e}")
             db.insert_processed_feedback(records)
 
     db.close()
     print("✅ Safe Dynamic Migration execution sequence completed!")
 
-
 if __name__ == "__main__":
-    # 1. Test connection
     db = SupabaseDB()
-    
-    # 2. Run the migration to populate the cloud tables
     print("\n[MIGRATION] Starting data migration to Supabase...")
     migrate_csv_to_supabase()
-    
-    # 3. Now test the reputation calculation after data is inserted
-    print("\n[TEST] Fetching updated Reputation Summary...")
-    try:
-        rep = db.get_reputation_summary()
-        print("Reputation Summary Result:")
-        print(rep)
-    except Exception as e:
-        print(f"Error checking summary: {e}")
-
     db.close()

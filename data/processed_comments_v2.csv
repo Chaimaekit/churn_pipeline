@@ -1,0 +1,326 @@
+﻿customer_id,username,feedback_category,sentiment,complaint_intensity,raw_text
+9888f72da15b,نورالدين أحوفي,service_quality,neutral,1,باش دخل روشارج عادية 50 درهم.. واش تكتب 555 والأرقام وتاصل صافي ؟
+5d5fac6138b8,Mohamad Azemate,service_quality,neutral,1,فوقاش غدي ارجعو العرض ديال أورونج 30 درهم الشهر
+a63046414bc0,حنين حسن,pricing,neutral,1,امتى عرض 20درهم 15يوم
+bbac1ac598c6,Hakim Widadi,service_quality,neutral,2,امتا غادي ترجع نجمة 6
+007e1263c49e,Asmae Chafir,service_quality,neutral,1,Wach kyn 3ard 50 *6
+eed5a970497a,Dounya Oil,pricing,neutral,2,Waxx gheda ghadii yrj3 l3rd dyall 10dh o5 dh o20 dh *6
+dd6271493e6f,Bdlkbir Ounagh,service_quality,neutral,1,واش 20دهم فيها 15يوم لامحدود
+cbc58276a7dc,عبد المولى الصحراوي,pricing,neutral,1,واش كين العرض ديال نجمة 6 فا20درهم
+78a8f7a651bb,Dafir Youssef,pricing,negative,3,غدين نبقاو نتسناو 6 30درهم شهر
+861e561d29e8,Yahya Khoya,pricing,negative,2,واش مكيناش 30 درهم
+8642dec5ee2c,Hassna BG,service_quality,neutral,1,واش متوفر حاليا العرض
+00d687a3e92d,Abdélmoùlà Kàmàl,pricing,negative,3,حتى 20 درهم *6 حيدتوها
+1f68f69e7f82,Hiba Hiba,churn_intent,negative,3,دابا مبغيتوش ترجع لينا *6
+bbac1ac598c6,Hakim Widadi,service_quality,neutral,1,واش كينا نجمة 6
+d6edb718136c,Hãň Äņə,pricing,negative,4,الله ياخذ فيكم الحق جميع دول العرب شركات لاتصال ديالهم دايرين لهم عروض رخيصة إلا نتما حتى *6 30 درهم لي برأسها كتجينا غاليه حيدتوها
+a6ac277b9a6b,Aya Idrissi,service_quality,neutral,1,امتى سترجع عرض *6؟
+a6ac277b9a6b,Aya Idrissi,service_quality,neutral,1,Orange امتى سترجع عرض *6؟
+c29b8d8d00ee,زهير الادرسي,service_quality,neutral,1,امتى سترجع عرض *6؟
+4cb0639fade3,زهير الادريسي,service_quality,neutral,1,امتى سترجع عرض *6؟
+48f770bec81d,Zohiur Idirissi,service_quality,neutral,1,امتى سترجع عرض *6؟
+deab6d7162f6,Soukayna Nadir,service_quality,negative,3,السلام عليكم، الريزو ديال أورونج عندي ضعيف بزاف فالدار، كيمشي ويجي. بغيت ندير طلب باش تشوفو التغطية فالمنطقة ديالي
+5d1118ff869d,Hajar Hajar,service_quality,negative,3,رجعو نجمة 6 تفوووو
+8767eeed6d62,Soukaina Ahsanu,pricing,neutral,1,بغينا عرض 30dh *6
+1fd016f38068,اتفاق,service_quality,neutral,2,دبا غير قولو لينا علاش حابسين نجمة 6
+91e04f8f2d22,Fatim EL,pricing,negative,2,بغنا لعرض نجمة ستة تلاتين درهم
+eb425eff8231,Aziz Karim Zamroud,pricing,negative,3,مبغنا ولو غير 0dh
+20ba0880ebc9,نهيلة نهيلة,service_quality,neutral,1,واش بصاح رجع العرض نجمة 6
+cb725823157e,Boston,service_quality,neutral,1,. · Follow
+72d130e6057f,ᎠᏫᎯᎯ ᎠᏫᎯᎯ,service_quality,positive,1,ديرو الخير فهاد العيد وردو لينا *6
+e8901d80ce19,Youssef Youssef,pricing,neutral,1,واش 30 نجمة 6 لا محدود
+173facd5c218,Hind Allaly,pricing,neutral,2,واش كين عرض نجمة 6 تع 20 درهم ليوم ؟؟
+c2ae4e271e75,Mohamed Med,pricing,negative,3,بغينا نجمة 6 ديال 30 درهم زعما مطلقوهاش فهاد العيد ؟
+068816a42a96,rissala,pricing,neutral,1,واش *6 20 درهم متوفر حاليا Orange
+fd334d52d2af,هند هند,service_quality,neutral,1,وش كين عرض نجمة 6
+fd7b229c3d0e,مريم كرم,service_quality,neutral,1,واش كاين عرض نجمة ستة عشرون درهم من لامحدود مدة خمسة عشر يوماً
+63babe72df0b,Mohamed Faiz,service_quality,negative,3,واش ريزو هاد أيام فيه شي مشكيل راه مبقاش خدام لمكالمة لا كونكسيو مع علم كان من قبل خدام مزيان
+0b6ee9255945,Lina Cilvana,pricing,neutral,2,واش كاين.عشرين درهم لامحدود
+4fad0cd786a3,Ssifdin Abbassi,service_quality,neutral,1,واش كاين العرض *6
+4c33096547c6,Zahra Zahra,service_quality,neutral,1,واش كاين عرض 20 درهم 15 يوم*6
+97bfee7821f1,Khalid West,service_quality,neutral,1,كيفاش نقدر نحول رصيد دراهم للأنترنيت
+723af4d48385,ياسين بديعي,service_quality,neutral,1,شنو كاين عرض 50 درهم *6
+b61397b23b8b,Abd L Hadi,service_quality,neutral,1,واش كاين عرض فاورونج 20درهم
+e4a3f2408ad9,Ahmed Elallaoui,service_quality,negative,3,را كاين مشكل في الفيبر في روش نوار
+af3caf2afdcd,مانشستر ستي الرجاء,service_quality,neutral,1,ونجمة 6 30 درهم امتا غاترجع
+df73d90dccfc,Abde Louadoud,customer_support,negative,4,شركة فاشلة و كذابين . شريت عندكم تيليفون و مبغيتيش ديرو ليه ليفريزون
+d2f0f5455d6c,Omar Benallal,service_quality,negative,4,ADSL orange مخدامش عندي من صباح
+989551d19ed9,Romanci El,service_quality,neutral,1,Orange *6 فوقاش اخر اجل
+0bdaddc974e8,Hatim El,pricing,neutral,1,بغين عرض 30 درهم*6 لمحدود
+f154e1c8aca3,Solaimane El,pricing,neutral,2,وش بصحه 20درهم كدوز15يوم
+8101f01e969d,All Gawski,service_quality,positive,1,Sometimes I think we should live more than a hundred years with perfect physical and mental health to get to know so many beautiful and special places that the world has to offer. Scotland is one of those romantic paradises.
+99b4d1e889ca,Natalie Ann Mazzola,service_quality,neutral,1,"Just returned to US after 6 weeks in Scotland! Starting and ended in Edinburgh! Who doesn’t love it?!!As my family history dates back to 17th century, I felt like I was walking on my own land! The music, the vistas, the people and food, but more…"
+419dd34d8497,Trisha O'Sullivan,service_quality,positive,1,Edinburgh is definitely one of the most beautiful places on earth. Highly recommend a trip there once a year to soothe the soul.
+35eba8c1f7ac,Beata Kasprzak,service_quality,positive,1,"So magical, like going back to childhood story time"
+15b9a86a3c31,Lesley MacKenzie,service_quality,neutral,1,"I wish. I'd love to see our old home in Stockbridge, visit the Botanics and see a Fringe show. Too far and too old now, sadly. Memories have to suffice. Love from Queensland, Australia"
+a3ea9a7345f8,Mak Reyes,service_quality,positive,1,This brings back some beautiful memories of 2011-2019 when i was working in offshore somewhere in north sea. Indeed edinburgh is the best city in the world. Infact leith is my stress reliever
+a17ec53cf572,Lhssan Hanan,service_quality,neutral,1,Wwach kayn l3ard 20 dh 15 lyom
+02c196e9674a,Kawtar Ell,pricing,neutral,1,وش مزال متوفرة 50dh
+3b3cd3fb3d8f,Abd Elmouine,service_quality,negative,2,wlad l9hab 1G fina hya
+57cef52c7638,Mustapha Larache,service_quality,neutral,1,واش ممكن نشرحيها وخا عندي اشتراك
+31cadc67e6b3,Youssef El Asli,customer_support,negative,4,J'aimerai bien savoir après plusieurs réclamations en ce qui conserne l'absence du réseau à la ville de rommani tous les week end sans aucune suite favorable
+f542ce7900cb,ᎶᎯᏒᏨᏫᏁ ᎬᏞᎬᎶᎯᏁᎿ,service_quality,neutral,2,واش كتنزو على لوقت
+1f7a32ef4498,Malak Benouna,service_quality,negative,3,فين 1g جوج مرات و نتوما تفلاو على عياد الله كن غا درت اتصالات
+14ec48d7bbf5,Ÿõû SSêf,service_quality,neutral,1,واش عرض ديال 15 يوم كااين ؟
+695711edf2da,Salimi Mounir,churn_intent,negative,4,الإخوان، بغيت نلغي الفورفي ولكن ما عرفت مع من نتواصل. درتو بعدما جربتو فالمنطقة القروية ديال مولاي يعقوب، وللأسف الريزو منعدم تقريباً وما كاين حتى تغطية. الغريب فالأمر أن جميع الطرق كتوصل بسهولة للاشتراك وأداء الفاتورة، لكن ملي كيبغي الزبون يلغي الاشتراك كيولي التواصل شبه مستحيل. نتمنى من الشركة توفر وسيلة واضحة وسهلة لإلغاء الاشتراك، بحال ما وفرت وسائل عديدة للاشتراك. فالخدمة خاصها تكون مبنية على الوضوح واحترام الزبون قبل أي شيء آخر.
+b70c7da2f67c,Otman Chafyq,service_quality,neutral,1,لمتخب لمغربي سجل هدف عطيونا 1Goدبا صيفطوها لينا أنا مسجل ومجاني والو
+3b165ae8fe37,Safia ZI,service_quality,neutral,2,فوقاااش غادي يرجع لعرض *6
+c5774e512898,Rajae Merzaq,service_quality,neutral,1,فوقاش ليرجع العرض
+175aa86deb85,Youssef Bz,service_quality,negative,3,ما بغينى حتا نجمة من غير نجمة 6*
+99c414ac0077,Ome Banat,pricing,neutral,1,10 دراهم*6 شحال تدي ليا من نهار
+3fbd258ea067,Imane Imane,service_quality,neutral,1,واش كاين عرض 30 درهم نجمة 6 جاوبونا عفاكم الا كان نديروه
+3fbd258ea067,Imane Imane,pricing,negative,3,و سؤال مطروح علاش عرض 30 درهم رديته 50 درهم ؟
+92b9b658ad28,Jawad Saddik,service_quality,neutral,1,فينو ريزو لي غادن نخدم بيه
+a91196bface9,فاطيمة فاطيمة,service_quality,neutral,1,واش كاين العرض ديال 20درهم نمجة6
+ee170f02142f,Simo Elkhorsi,service_quality,neutral,1,عروض اورونج
+4403f99e57a6,المتفائلة بالله,service_quality,neutral,1,واش كاين عرض* 6 20 درهم 15
+af4cab4b60f5,ۦٰ ۦٰ,service_quality,neutral,1,3ndi ridmi nout 12 imkn liya nbdlou
+f2f14ac42470,بت مباشرة,pricing,positive,2,العيد عند المغاربة هو فاش ترجعو العرض ديال 30 درهم *6
+af3caf2afdcd,مانشستر ستي الرجاء,pricing,neutral,1,العيد عند المغاربة هو فاش ترجعو العرض ديال 30 درهم *6
+5dc29aa6229e,Cyril Lamoureux,customer_support,negative,4,"Client Fibre à Tanger, privé de connexion depuis mon changement de box (Erreur : Pas de transporteur). Votre prestataire technique appelle, fait sonner une fois pour simuler un rdv manqué et clôturer le ticket. C'est inacceptable. Merci de régler ce problème d'activation au plus vite. C'est scandaleux."
+c8e3b997967a,Îlýášš Ero,service_quality,neutral,1,Samsung Galaxy A 03 cor من مدينة ازمور الجديدة
+8eebf6f05754,Yousra Et Salma,service_quality,neutral,1,اتمنى ان تجيبني ما هو المقابل ؟ وهل اذ استبدلت هاتفي باخر جديد توجب علي اعطاء هاتفي الحالي
+8eebf6f05754,Yousra Et Salma,service_quality,neutral,1,وما هو المقابل
+a9b3c54c2881,بخور راحت البال المرقي,pricing,negative,4,واش دبا وليتو تشفرو عيبادله نيشان واش يلاه درت لبارح 20 درهم ديتوها وزت 20درهم عاوتاني دبا ديتوها
+4cb0639fade3,زهير الادريسي,pricing,neutral,2,العيد عند المغاربة هو فاش ترجعو العرض ديال 30 درهم *6
+d37e3324b2e9,Asma Boukhris,service_quality,negative,3,ماوصلنا والو غي كاتكدبو علينا
+33191b8b2eb6,فاتي فالور,service_quality,neutral,1,فين خسنا نتسجلو
+b91c74ef8aa5,أم إلياس أم إلياس,service_quality,negative,4,والله العظيم حتى كدابة نتوما المبارة لي فاتت تسجلت ومعطيتوني والو Orange
+4a892c1080b1,حسام شفايري,service_quality,neutral,1,كفاش ندير تنتسجل
+d0f4bd565e32,Said Said,service_quality,neutral,1,كيفية الاستفادة من 1GO
+2a3717f85380,Raynan Safyani,service_quality,neutral,1,طريقة عفاكم باش نشارك حتا انا شي شرح مبسط
+9a2be7dc097e,Kim Lisa,service_quality,neutral,1,واش كل مباراة غعطيونا جيغا لكل هدف سجله المنتخب المغربي ولا غير مباراة المغرب وبرازيل
+b3b169ce96b5,Gangg El,customer_support,negative,2,انا سيفطت رقم ومصلني والو
+8cae0a13e499,Med EL,service_quality,negative,2,النصابة والشفارة لقبتو السوق سايبة
+a0b65ce325a4,ᎽᎯᏕᏕᎥᏁᏋ ᏦᎯᎠᎻᎥ,service_quality,neutral,1,اريد طريقة التسجيل
+7bb6dd8ab238,Abdellahe Kobi,pricing,neutral,1,واش العرض 50 درهم*6
+2efdb0072698,Sara Montachir,pricing,neutral,2,واش عرض * 5 30 درهم كاين
+1487aceac20b,Amal Amir,service_quality,neutral,1,واش كاين العرض نجمة 5
+cbaf6f42a003,ILyaso Mß,service_quality,positive,1,أحسن سخاوة شكرا اورنج
+0f490635a703,آل فيلسوفةه,pricing,negative,3,اشمن سخاوة ونتوم خديتو ليا خمسة دراهم غير شرجيتها ديتوها
+526143344d26,El-mehdi Farhane,service_quality,neutral,1,عندي عرض تع 4G و دبا بغت ندير هدا عرض واش خاص نوقف عرض بعدا ندير هدا
+fd35fbbc60e1,Adil Adil,pricing,neutral,1,واش كين عرض تاع 50 درهم *6
+500451882b5c,Khadi Ja,service_quality,neutral,1,امتا غايرجع عرض 20درهم *6
+237283dd6a83,Najib Modeste,pricing,neutral,2,واش *6 ديال 50 درهم ما دخلش فيها X
+06dcbe9bf355,Lamyae EL,service_quality,neutral,1,هل عرض نجمة 6 20 درهم متوفر حاليا
+3d240c5204df,اسراء محمد,pricing,negative,2,واش مغترجعو ديال 30درهم *6
+459a73f7fae7,Hassan Fatima,service_quality,neutral,1,عرض نجمة 3 متوفر
+a661a6294218,Sal Ma,pricing,neutral,1,كاين العرض نجمة ستة 20 درهم و 50 درهم ؟
+b73e74997d8d,Faag Timo,pricing,neutral,1,كاين العرض نجمة ستة 20 درهم...؟؟
+0aa88cdcbdca,SãMîrâ SàMørà,service_quality,neutral,1,واش كين العرض *6 ديال 50 درهم
+0cb7749f9bee,Salma Sal,service_quality,neutral,1,كاين عرض *6 ؟
+40920072e6af,Salma EL,pricing,neutral,1,بغيت نجمة 6 30درهم
+1ac67aff3bc0,Zahira Zora,pricing,neutral,1,وش كين العرض نجمة 6 عشرين درهم
+e5ea8b9d6780,أسماء أسماء,service_quality,neutral,1,ونجمة واحد شنو فيها ؟
+d781c0a3202f,Rida Riyahi,service_quality,neutral,1,علاش مكديروش اشهارات في قناة تيلي ماروك
+d721f6add6fc,Loubna Bel,pricing,neutral,1,Slm wach *6 50 dh kin l3rd dylha
+07e80d51286c,Wassim Jammour,pricing,neutral,2,و5 دراهم نحمة 2 شنوا فيها ؟
+e29d7f61d789,أم مريم كوثر,service_quality,neutral,1,واش كاين عرض *6 20dh
+cbb4684faa5b,حسناء العلوي,service_quality,negative,3,سلام عليكم ممكن نعرف علاش إنترنت مخدامش سيمانة واخا كين ريزو
+2e7e48e33b17,ملوكي ملوكي,service_quality,negative,3,وصلحو الخط 555راه مخدامش عندنا
+f2f14ac42470,بت مباشرة,pricing,negative,3,رجعو لينا 30درهم*6
+48f770bec81d,Zohiur Idirissi,pricing,negative,3,رجعو لينا 30درهم*6
+18676aa01882,Zone Euro,pricing,negative,3,رجعو لينا 30درهم*6
+e2d4659e4581,ال ال,pricing,negative,3,رجعو لينا 30درهم*6
+b684417e0d52,Ãbd Ēl Mãjìd Ãr,service_quality,neutral,1,واش حتى انتوما مشالكوم ريزو اورونج
+490eb3eb0278,Omo Zakaria,service_quality,negative,4,انا تسجلت فماكسيت ومجاتني حتى جيغا
+0bb5eefb82b8,Kha Lid,service_quality,neutral,1,Where 1 Go
+65a333f4de27,Aý Øůb Łbhjăwï,service_quality,neutral,1,واش العراض دايل *6 كاين
+a55d13a5f15c,خفاش خفاش,service_quality,neutral,1,متى ستصلنا 1جيعا؟
+157403dc5c6c,دات النقاب,service_quality,negative,3,أنا تسجلت فماكسيت ومجاتني حتى جيغا
+3d68962d7ce0,Imane El,service_quality,neutral,1,فين هي جيغا
+3453f2b8ade2,ⴽⵀⴷ ⵉⵊⴰ,pricing,neutral,1,كين عرض 20 درهم؟
+13de11a2fa18,جوهرة المغرب,pricing,negative,3,رجعوا لينا عرض 20 درهم راه العواشر هادو الله يعطيكم السيزي
+e5be8f065a7b,ام اسيد بإدن الله,service_quality,neutral,1,امتى غدي اسالي عرض 50 درهم
+25866edfc5ee,الباز لطيفة أم ياسر,service_quality,neutral,1,واش *5 فيها واتساب
+471394af3f69,بسمة الامل,service_quality,neutral,1,واش كاين عرض 50dh *6
+32ef4a7d3bb9,Hajar Fatima,service_quality,neutral,1,واش هاد العرض ديال 100درهم فيه كولشي اللامحدود واتساب وفايسبوك واليوتوب
+403606d976da,هاجر هاجر,pricing,neutral,2,سلام عليكم وقتاش يرجع لا محدود 30 درهم *6 وعشرين درهم
+057e2defef3a,راجلك احبي,service_quality,neutral,1,واش كين لعرض ديال 50 درهم
+3f385746eccb,سفيان,pricing,neutral,1,Kifach ndir dyal 100dh
+618bdfa2667b,talent and voice can be reached,service_quality,neutral,1,…
+83f5141a98e1,Ahmad Ras,pricing,neutral,2,واش رجع عرض نجمة 6 30درهم اردورنج
+27ae3f358533,Jou Da,pricing,negative,4,المشكل بعدا فديك لكونيكسيون ديال السلحفاة شارجيت 50 درهم *6 شهر دلعذاب
+3bd076ffef89,KaouThar Ait Hsaine,churn_intent,negative,4,انقطاع انترنت يومين بالمضيق ،رقم الزبون 05.30.19.94.36 و لا أحد يجيب، عادي نبدل الشركة ؟
+f8aaeee35978,Sara Ben,service_quality,negative,4,Vraiment hchouma man sbah ma9tou3 l'internet b9ina bla khdma
+66762bab1b5d,Khadija Laghlali,service_quality,neutral,1,Raj3o lina *6
+5f7a3c9eb881,Otman Tanjawi,service_quality,neutral,1,وش رجع عرض 30 *6 ولا مزال
+78a8f7a651bb,Dafir Youssef,pricing,neutral,2,بغينا نجمة 6 ديال 30 درهم شهر عافاكم
+af3caf2afdcd,مانشستر ستي الرجاء,pricing,neutral,2,بغينا نجمة 6 ديال 30 درهم شهر عافاكم
+8ca71a4da601,Noura El Hachimi,service_quality,neutral,2,رجعو نجمة
+b000d1f8e691,ⵉⵃⵜⴰⵔⵉⵎ ⵜⴻⵃⵜⴰⵔⴰⵎ,service_quality,neutral,1,واش كاين عرض 20 درهم *6
+66f2b9cad238,محمد أمين بنعيش,pricing,neutral,1,10 درهم نجمة 6 شحال فيها
+d70d6978ce2b,عبد المجيد لفزيني,service_quality,neutral,1,السلام عليكم بغيت wifi تاع 149 درهم واش يمكن شي حد يتواصل معايا
+cb725823157e,Boston,service_quality,neutral,1,. · Follow
+2a76f28829f9,ᎯᎽᎷᎯᏁ ᎯᎽᎷᎯᏁ,service_quality,neutral,1,وش كينة لعرد ديال اورونج 50درهم نجمة 6
+3146f520db69,Ayoub Alk,service_quality,neutral,1,طريقة التسجيل من فضلكم
+075c452e7cb0,عبد العزيز ال,service_quality,neutral,1,بغيت نشرجي 5درهم مكالمات واطنية أش من نجمة
+af18e5128482,فراشـــــة زهـــــور,service_quality,neutral,1,واش كاين عرض نجمة 6
+d37a6d3bf520,حلم وراء البحر,pricing,neutral,1,واش كين لعرض 20 درهم*6
+84d857e77116,عصام أوعشور,service_quality,neutral,1,طريقة الإستفادة
+0d841977b346,Wor Cab,service_quality,neutral,1,فينهاية 1g ديال ديال لمنتخاب
+27aa6dc62348,Tom Run,service_quality,neutral,1,كيفاش نتسجل
+0da2dcb62686,ٱلــ قـــاضـــي,customer_support,negative,2,مزال موسلتنا ولو
+f38c54e05e1e,لمهيب لمهيب,service_quality,negative,4,تسجلنا ومسيفطتو والو غير لكدوب وصاف
+5d1118ff869d,Hajar Hajar,pricing,neutral,2,نجمة 6 20 درهم واش كاين عرض ديالها
+293af56d3bec,ال برزيلي,pricing,neutral,1,5دراهم *6 واش كينا
+e6816d7fa929,يو نس,pricing,neutral,1,20 درهم *6 لامحدود 15 يوم ؟
+8eebf6f05754,Yousra Et Salma,service_quality,neutral,1,مرحبا اورنج هل لازال يوجد عرض نجمة 6 ب20 درهم لمدة 15 يوم لا محدود أتمنى ان تجيبيني انتضر جوابك
+5b137108fd9f,ابتسام ابتسام,service_quality,neutral,1,Wach kayan *6 ouronj
+e1fecccb4682,حفصة اوبيهي,pricing,negative,4,شنو هاد العبث عاد شارجيت او جيت نتاصل لقيت صولد ما كاين
+61d3670a7dc5,الريفية العنيدة,pricing,neutral,2,بغينا 30درهم
+8b269cdafc45,tagza nadi,pricing,neutral,2,واش شي واحد شارجها وخدمت
+b829380eeca3,ام إسراء,service_quality,neutral,1,وش رجعات *6 20
+4bdfc73e0740,لكيضمي مراد,pricing,neutral,1,وش 30درهم *6 كاينة
+155a533d87c2,مؤمنة بالله,pricing,negative,3,غير كدوب سولت عليه مكينش كين 50درهم
+d4ff7c625544,عبد الإله بروحو,pricing,neutral,1,واش العرض ديال 20 درهم مزال كاين
+465242bc2dff,Hajar El Idrissi,service_quality,neutral,2,مكنتسناو والو من غير *6 ناس عندهم وطني هي باش كخدمو
+787aaebb7abc,Aya Nori,service_quality,neutral,1,كنتسناو العرظ
+2249a0ea72b5,Ąbdö Berrissoun,pricing,negative,4,Orange ماشي عيقتو شوية طلقو لعباد الله العرض الله ياخد فيكم الحق واش مابقاش الحق للدرويش حتى فكونيكسيو باش يهدر أو يتفرج يحايد الهم عليه
+178889e052f4,Ma Lake,pricing,neutral,1,واش كاين العرض ديال ديال 20 درهم*6
+744415f39150,Moubarek Szootski,pricing,negative,3,ANTI INTERNET GHALI
+43b77e2310a9,وسيم المغربي,pricing,negative,4,واش ضارب بوكم الزعل ولا شنو ؟ 25جيجا ب300درهم ؟ واش حنا في امريكا ولا سويسرا الله يعطيكم الإفلاس عيقتو بزاف
+1f19e9bf32bc,Gaucho Nero,pricing,negative,3,*6 ديال الفقراء 30 درهم هي لي بغينا
+a2eb9b393ebb,Abdo Beniaich,service_quality,neutral,1,بغيت نفتح فورفي عن بعد معامن نتاواصل في اورانج. كاينا شي طريقة
+cd3aef32ba71,Hafsa Essafi,customer_support,negative,2,جاوبوني فالخاص
+fa93477a2622,Jami Malak,service_quality,neutral,1,واش كاين العرض *6
+53abe4783854,Sofaine Agojil,pricing,neutral,1,هل يوجد عرض نجمة 6. 50 دراهم
+8bfb866ae585,Ezzammouz Mohammed,service_quality,neutral,1,واش *33 20 درهم لا محدود تتخدم جميع مواقع تواصل اجتماعي ؟
+9732b54f7f55,عبد الرفيع احارز,service_quality,neutral,1,انا ديك نهار دريت نجم 33 معرفتش فين مشت؟؟
+2e389b4b9b23,ᎰᏚ ᏚᎯᏞᎯᎻ,pricing,neutral,2,واش كاينة نجمة 6 ديال 20 درهم
+8f0b98f46d98,محمد محمد,churn_intent,negative,3,السلام عليكم بغيت نلغي الوفي شنو مطلوب مني
+857b6fc026d8,Nourdin Moussaoui,pricing,negative,4,رجعو لينا 30 درهم ولا 20 درهم *6 راه دراوش مساكن معندهومش باش اديرو 50 درهم
+7f3b1e241639,Naima El,pricing,neutral,1,امتى 20 درهم *6
+3777a7bf3af3,Malika El Khatib,service_quality,neutral,1,واش كاين عرض *6 20 درهم 15 يوم ؟
+04689d53adf8,Younes DN,service_quality,negative,3,راه عندي مشكل في الأنترنيت
+ca8f20e049fe,Sàw Sàn,service_quality,neutral,1,Wach Kina *6
+a0c7df2aa9bd,Hayat Aya,service_quality,neutral,1,السلام عليكم واش كاين عرض نجمة6
+567ad250e6d4,Khaoula Khaoula,pricing,negative,3,رجعو لينا 30درهم*6
+1a1876f99504,Bilal Ess,pricing,neutral,1,واش عرد 20 درهم أورونج كين
+9694deaa120f,Atare El,pricing,neutral,1,Orange واش كين عرض 30dh *5
+161d8fa97116,Fatima Zhra Rabih,pricing,neutral,1,عرض 20درهم أورونج كاينه ولا لا
+7bb6dd8ab238,Abdellahe Kobi,pricing,neutral,2,هل مزال عرض 50 درهم 6* مزال مستمر
+cf1896e5b48c,Ibtissam Mokrane,service_quality,neutral,1,واش كاين عرض *5 30 درهم
+0072d310d2f0,ۦٰ۪۫ۦٰ۪ۦٰ۪۫ ۦٰ۪۫ۦٰ۪ۦٰ۪۫,pricing,neutral,1,كاين عرض نجمة 6 20 درهم ؟؟
+df0977852e90,Casawi Salah,pricing,positive,2,غير مايقارب 125درهم ناخذ كارت سيم سعودية بانترنت لامحدود و و مكالمات لامحدود
+91e04f8f2d22,Fatim EL,pricing,negative,2,رجعو لنا لعرض 30dh
+588b816ac6b6,Aicha Aicha,service_quality,neutral,1,واش كاين عرض نجمة 6 50 درهم
+c6df52e18b95,نسمة الأمل,service_quality,neutral,1,إمتى العرض ديال 30درهم نجمة 6 اللامحدود
+4c861afae9ea,نور سوسية زوينة,pricing,negative,2,شنو كحربقو هدو مفهمتش والو فهد العروض ديلهم
+ff46bdc7b796,Hamza Hmz,pricing,neutral,1,واش كاين عرض *6 ديال 20 درهم دبا ؟
+3b7e78151a3a,Ibtissam Lmnawar,customer_support,negative,2,سوا اليوم سوا غدا *6 30 دارهم ولا بدا تفووو خليتونا نهدرو مع راسنا
+9c584df85016,Safiya Amsddar,service_quality,neutral,1,واش بدلو نجمة 6ب 5ولا شنو
+b34212a8e491,آسيل 'ے,service_quality,neutral,1,واش تتبقا شهࢪ كامل ولى لاء
+b4284af798e8,Nezha Nezha,service_quality,neutral,2,اشمن سخاوة لا ممشارجينش كنتسناو *6
+c455319ce26e,Marwa Elfarjani,pricing,neutral,2,امتا. عترجع نجمة 6 درهم30
+246b187a85bf,FaTi Ma,service_quality,neutral,1,واش غرض *6 20درهم كاين
+e46f4d6c2b4f,Ranya Ranya,pricing,neutral,2,30 dh 6*. هو لكنشجعو
+4901e03ae3dc,Kadîrø Àl Rmmdani,pricing,neutral,2,لخوت كين لصرجا 20 درهم *6 شحال تعطيه ؟؟
+69c37731820d,جوهرة أمازيغ بوك,service_quality,neutral,1,فريق غيدي اللقب *6 30
+397a31170fa5,Øssà Mà,service_quality,positive,1,حنا كنشجع *6
+e58b8af63e18,سعد سعد,pricing,negative,2,30 درهم *6
+ac40e9fd4843,Aura Zeenox,service_quality,neutral,1,ديما *6 هي لي كينا
+a2da1bf55f20,Zakaria Sbaiti,pricing,positive,2,بارك غير20درهم صاافي
+bb81d93b000d,Soufian Beroual,pricing,neutral,1,هل يوجد عرض نجمة ستة خمسون دراهم
+551814a72be5,Moussa Moussman,pricing,negative,2,و 20 درهم *6؟؟
+1485ac442611,Rozita Rozalina,service_quality,negative,4,كيقولولا لا محدود وملي تشارجي تلقاها محدود ولا شبغيتها
+0bb9255cce27,عبد الله أيت الحسن,service_quality,neutral,1,واش كين العرض 20 درهم نجمة 6
+fcfd33b5b12c,تين هينان,pricing,neutral,1,عافك واش كاين العرض ديال 50 dh *6
+9397f8e6e912,Souad Souad,service_quality,negative,4,الريزو قليل بزاااااف
+6cbc00b259fb,أميرة زوجي,service_quality,neutral,1,واش كاين عرض نجمة 6 20 درهم ديل 15 يوم لا محدود
+8fa87fd37ced,Soukaina Elmaski,service_quality,negative,3,M9tooo3 wifi makaynch b mara
+f9d7928df79d,البيع بالجملة والتقسيط,service_quality,negative,3,السلام عليكم الويفي مخدامش
+1da7bb05b99f,صنهاجي الحسين,service_quality,neutral,1,واش كين العرض ديال 50 درهم *6
+604613f76ccc,Řãčhïď Ël Ĉheñtöuf,service_quality,neutral,1,واش مزال مستمر عرض*6 50درهم
+d79c42424a8c,Khadija Zidani,service_quality,neutral,1,عرض 20 درهم نجمة 6 15 يوم واش كاين
+c0f59b30ac97,Saaidfree1,pricing,negative,3,واش مزال ماهداكم الله ترجعو لينا نجمة 6 ب30درهم اولا صافي حيدتوها بشكل نهائي
+97bfee7821f1,Khalid West,service_quality,neutral,1,كيفاش نقدر نحول رصيد دراهم للأنترنيت ؟؟؟
+242bc3acd210,IChihi Moh,pricing,neutral,1,واش كاين ديال 150درهم
+7963e52751e3,Mohamed Assioui,service_quality,neutral,1,واحد سؤال واش يمكن ليا نرجع واحد نمرة مشات ليا مافيهاش كونطرة
+c68a2a0bc515,Fatima Zahra Kannich,pricing,negative,3,رجعو لينا العرض ديال نجمة 6 ديال 30 درهم
+4cb0639fade3,زهير الادريسي,pricing,neutral,2,واش عرض نجمة 6 30 درهم غترجع ولا لا غير علمونا بعدا باش منبقاوش نتسناو على والو
+c7709bba546b,Bnitto Brahim,service_quality,neutral,1,واقع لي بلان شرجيت هد العشية لعرض 50درهم ارونج تفرجت فيه تقريبا شي ساعتين اهوما الوحي لي الوضع الاساسي ولداب.
+aa2a011b02c3,فو زي,service_quality,negative,3,السلام وعليكم كيفاش انا دخلت روشارج 20 درهم *6 وقالو ليا دخلات وفاش تندخل للرصيد تنلقاها كينة ولكن مخداماش ليا
+f75de330d2d6,Amine Ftaari,pricing,neutral,1,واش كاين عرض*6 20درهم ؟؟
+588b816ac6b6,Aicha Aicha,service_quality,neutral,2,امتى غادي ترجعو لينا العرض *6 ديال 30 درهم؟
+91e04f8f2d22,Fatim EL,pricing,negative,3,رجعو لنا لعرض 30dh*6
+e2d4659e4581,ال ال,pricing,neutral,1,وش كين العرض*6 30 درهم حالياً
+4cb0639fade3,زهير الادريسي,pricing,neutral,1,وش كين العرض*6 30 درهم حالياً
+37f517d7c1df,Fātîma ZaHra,pricing,negative,4,رودو لينا العرض *6 راك عيقتو
+5e37d2216c4c,Amin Ab Ab,service_quality,neutral,1,عرض 20dh نجمة 6 للامحدود واش كاينة
+62a25d5c7f02,التــو لـيــب,pricing,neutral,2,ايمتى اترجعو عرض *6 30 درهم ؟
+6db71d93f9e8,Abdrahim Amimi,service_quality,neutral,1,واش كاين عرض 20 درهم نجمة 6
+b27d65bc9db0,Salou Salwa,pricing,neutral,1,واش كين عرض 30 درهم نجمة 5
+9f66eb903253,سيمو محمد,service_quality,neutral,1,6*///30//30
+d1dff6ac73da,Maryam Maryam,service_quality,positive,2,رجعو ووووووو لين العرض *6
+92b9b658ad28,Jawad Saddik,pricing,negative,4,رجعو 30درهم *6. ماعندنة مانديرو بهاد تخربيق ديالكم
+94bbff15eb54,Haffsa Hafsa,service_quality,neutral,1,وشي كاين العرض ديال نجمة 6
+dd2c0b76cab7,Gharib Lhayat,service_quality,negative,3,Chafti ga3 had l3orod li darto walah makhadam bihom m3ana rado *6 tkhadmo m3ana matradohach walah mandira ana kono haynyan
+cee463cc08c7,Mimoun El,pricing,neutral,1,30 درهم * 6
+d63b62d5f514,ڊڪسټر أجـمـي,service_quality,neutral,1,خـاصاني كونيكسيون
+acc4a96aab31,Assiya HN,service_quality,neutral,2,1Go علاش مصيفطتوهاش
+c70bfe42e578,وَعَجِلْتُ إلَيكَ رَبِّ لِتَرضىٰ,pricing,neutral,1,واش كاين العرض ديل *6 20 درهم
+f8a798545c06,Kim Kawtar,service_quality,neutral,1,إيمتا غادي يسالي عرض *6 20 درهم
+77dcdac8ff83,Brüñęttė Gìrl Ñāẞîrå Gráñdfäthëh,service_quality,neutral,1,واش كين عرض 20 نجمة 6
+d110d6231882,M'elle Aménà Toubii,service_quality,neutral,1,واش كاين العرض ديال 6*ديال 20
+1410579b1264,Mohamed Lahlali,pricing,neutral,1,واش كين عرض 20 درهم نجمة 6 لا محدود
+d542dba00cc0,غفرانك ياربي,pricing,neutral,2,لي عندو 20 درهم
+567ad250e6d4,Khaoula Khaoula,pricing,negative,3,رجعو لينا 30درهم*6
+18676aa01882,Zone Euro,pricing,negative,3,رجعو لينا 30درهم*6
+ece1fb837e89,Idriss Outouda,pricing,negative,3,رجعو لينا 30درهم *6
+20ab823cfc32,Sami Karim,service_quality,negative,4,وا فين الجيغا لي قلتو لينا البيت تماركا والماتش سالا وشي جيغا ماشفناها يالكذابا
+8d4065988b02,يحيى يحيى,service_quality,neutral,1,وا فيناهيا جيغا
+2e36060d8237,Abdo Abdo,service_quality,negative,3,فين هي جيغا موصلنا والو
+96b443f5953b,الفتاة المتفائلة,service_quality,neutral,1,واش كاين عرض 20درهم *6لكيدي 15يوم
+e4a04be0e6ac,رقية رقية,service_quality,neutral,1,السلام عليكم واش كاين عرض 20. درهم 15. يوم
+55b03bd40bef,Code Code,service_quality,neutral,2,وصيفطو لينا 1G ولا ماعندكم كلمة
+6ae99231e490,Ayuob Vida,pricing,negative,3,رجعو نجمة 6 30 درهم
+0bfe3f8fea6a,Rokaya Darouiche,service_quality,neutral,1,كاين عرض 20درهم * 6
+4c1a8fed38f7,وفـــــاء الـــــحـــــجـــــري,service_quality,neutral,1,واش متوفر لعرض نجمة*6..30درهم
+3a7874f2924b,Omar EL,pricing,negative,2,عرض *6. 30درهم غيرج
+0d90e492fae0,Zakaria Essebbae Zakaria,service_quality,negative,3,Internet mauvais
+44d77b4a0c1b,Lahcen El,service_quality,neutral,1,واش عرض نجمة 6 أرونج 50 درهم فيه حتا تيك توك ولا لا
+8600000ec895,ألْقُرْآنْ رَبيعَ قَلْبي,service_quality,neutral,2,العيد هو نهار ترجعو لينا العرض*6
+64e57854f152,سندس سندس,service_quality,neutral,1,فقاش ترجع نجمة 6
+e4a04be0e6ac,رقية رقية,pricing,neutral,2,السلام عليكم. واش كين. لعرض نجمة. 6. 30. درهم ٱرونج
+d8b1ccca6020,Abdllah Baha,service_quality,neutral,1,وطلقو الناس *6 اشمن عيد الشغل والا عيد اللفت
+9f93c9cbfc70,Najwa Farji,service_quality,positive,1,سعيد عندكم غير نتوما لبغيتونا نكونو سعداء طلقو لعرض نجمة 6
+ee0b3cc0a6de,El Elmassoudi Boujamaa,service_quality,positive,1,عيد الشغل كاين غير عندكم نتما ..
+557e3cea3294,ام آية وآسية,service_quality,neutral,1,ماش شغلنا ف عيد شغل حيت ما عندنا تا شغل شغلنا دابة هو ترجعو لينا *6
+a682493ea6f0,Thee Saoudi,customer_support,negative,4,الشباب شي نمرة فين نعيط لهد أبناء الرائعة درت 500 درهم تعبئة مدوراتش 7 أيام
+d1a640a34482,Mariya Mariya,service_quality,negative,3,عطيوني رقم للتواصل مع تكنيسيان راه الويفي مشا لينا من البارح او مخلص
+5b312cb201d1,الرحمان اية,pricing,neutral,1,بغينا *6 30dh امتى ترجع
+b1c452a136a9,Kamal Saber,pricing,neutral,1,واش كاين عرض *6 20 درهم لامحدود ؟
+a3fc51b4fd62,Amal Amal Amal,pricing,neutral,1,عرض 30dh نجمة 6
+568bcfd28deb,Na Bila Rca,service_quality,neutral,1,كيفاش نخدها
+3691f6896801,Soufiane Lotfi,service_quality,neutral,2,Hna bghina*6 makaynax orange
+91fb60a9990f,Ouchene Hassan,pricing,neutral,1,Wax kyna *6 20 dh
+4ed776e9e701,Mohamade Bel,service_quality,neutral,1,ولكن حتا لجمعة
+7ced6458fb5e,Wiam Tribak,service_quality,neutral,1,كيف أستفيد من الهدية الإستثنائية
+4c23db3d4f9a,Øù Ssamâ BA,pricing,positive,1,كاين العرض 20dh
+807c48d2c625,لحظات آمال,pricing,negative,3,هي إلا رجعتو لنا نجمة 6 30 درهم
+33ff77662343,RiHame Wijdane,pricing,negative,4,عمي اورنج طلق لينا 30 درهم *6
+e2b94b57412a,متوكل على الله,service_quality,neutral,1,بغينا العرض ديال نجمة 6 الشهر الامحدود ب 30 درهم الله يرحم لكم الوالدين
+af3caf2afdcd,مانشستر ستي الرجاء,pricing,neutral,1,العيد عند المغاربة هو فاش ترجعو العرض ديال 30 درهم *6
+8f5329c2ae9c,Tatbirt Nsous,pricing,neutral,1,bghina 30dh *6
+bc007efa3ff7,حمدلله كولشي فيد الله,pricing,negative,2,هي إلا رجعتو لنا نجمة 6 30 درهم
+a7c235e07ad9,أحمد نبيل,pricing,negative,4,مللي كاتشارجوا 50 درهم مشات 30 درهم إلى الأبد لأن السوق يتحكم فيه العرض والطلب
+b1c452a136a9,Kamal Saber,service_quality,neutral,1,واش كاين عرض *6 20 درهم لامحدود ؟
+e73708a055b5,Marewne Bene,service_quality,neutral,1,واش كين نجم 6 ديال أرونج 20درهم وإيمتى غادي تسالي
+bf9a4679bf5a,Layla Lh,pricing,negative,3,رجعو لينا 30درهم
+2620a290b199,Mustapha Lahmidi,service_quality,neutral,1,واش كاين عرض نجمة 6
+af3caf2afdcd,مانشستر ستي الرجاء,service_quality,neutral,1,فقاش غدي يرجعو العرض *6 30 درهم اللامحدود لمدة شهر على مواقع التواصل الاجتماعي
+f2f14ac42470,بت مباشرة,service_quality,neutral,1,فقاش غدي يرجعو العرض *6 30 درهم اللامحدود لمدة شهر على مواقع التواصل الاجتماعي
+25d6a5bc1dfb,Pretty Pretty,service_quality,neutral,1,كين عرض *6 20 درهم
+95c9a179fb2b,Adam All,pricing,negative,3,واكن تقدر تصاليها قبل شهر لا رجعوا لينا نجمة 6 ب 30درهم
+30a6cbcb0d2a,Lmsli Pro Max,pricing,negative,4,ضلم هدي شرجيت 50 درهم *6 تسلات فيمين
+8d78af4540c6,Aya Ìman,service_quality,neutral,1,بغيت ترجع نجمة 6لامحدود
+588b816ac6b6,Aicha Aicha,service_quality,neutral,2,امتى غادي ترجعو لينا العرض *6 ديال 30 درهم؟
+c0ad80110df6,Faouzi Aouryagel,service_quality,negative,2,فخبارك مبقيتش كن عمر تعبئه
+96964db3a783,Hamid Spechl,service_quality,negative,4,الله ينعل بوها كونيكسيون عندكم الفقصة والأعصاب والسكر كنخلصو الفلوس هكاك باطل حادكين غير فالاشهارات الخاوية
+0dc493ff60e0,Ain Chok,service_quality,negative,3,والله يخد فيكم لحق فين هيا 1 جيغا
+0dc493ff60e0,Ain Chok,service_quality,neutral,2,لمذا لم تعطونا 1 جيغا
+abd56beb666f,عقلي هارب,service_quality,neutral,1,واش كاين العرض نتاع 20 درهم نجمة 6
+ef4ca3a1c05b,عبدالرحيم جلالي,service_quality,neutral,1,واش اللامحدود 20 درهم نجمة 6 فيها 15 اليوم واش كاين هاد العرض
+e819425d08fb,ام افنان,service_quality,neutral,1,واش كاين لعرض 6*20
+90f70275578e,Ben Bilal,pricing,neutral,1,واش كاينة 30 درهم اللامحدود

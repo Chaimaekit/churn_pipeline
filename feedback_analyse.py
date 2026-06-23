@@ -1,5 +1,6 @@
 import os
 import json
+import glob
 import pandas as pd
 from groq import Groq
 from dotenv import load_dotenv
@@ -14,7 +15,7 @@ supabase_key = os.getenv("SUPABASE_KEY")
 supabase = create_client(supabase_url, supabase_key)
 
 
-def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comments.csv"):
+def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comments_v2.csv"):
     """
     Reads scraped Facebook comments (JSON) and converts to structured CSV
     for the /reputation API consumption.
@@ -31,7 +32,7 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comm
     ]
 
     Output CSV columns (matching /reputation API expectations):
-    - customer_id, feedback_category, sentiment, complaint_intensity, raw_text
+    - customer_id, username, feedback_category, sentiment, complaint_intensity, raw_text
     """
     groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -55,6 +56,9 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comm
             continue
 
         current_id = str(row.get("customer_id", f"unknown_{idx}"))
+        
+        # Extract the username directly from the scraped data frame row
+        current_username = str(row.get("username", "Anonymous User")).strip()
 
         try:
             response = groq.chat.completions.create(
@@ -95,7 +99,9 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comm
             analysis = json.loads(response.choices[0].message.content)
             for item in analysis.get("results", []):
                 item["customer_id"] = current_id
+                item["username"] = current_username  # Injected directly without modifying LLM prompts
                 item["raw_text"] = text_payload
+                
                 # Ensure all required columns exist
                 item.setdefault("feedback_category", "service_quality")
                 item.setdefault("sentiment", "neutral")
@@ -104,9 +110,10 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comm
 
         except json.JSONDecodeError as e:
             print(f"Warning: Failed to parse LLM response for ID {current_id}: {e}")
-            # Fallback: add with defaults
+            # Fallback handling including username column
             analysis_results.append({
                 "customer_id": current_id,
+                "username": current_username,
                 "feedback_category": "service_quality",
                 "sentiment": "neutral",
                 "complaint_intensity": 1,
@@ -123,8 +130,8 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comm
     if analysis_results:
         result_df = pd.DataFrame(analysis_results)
 
-        # Ensure column order matches /reputation API expectations
-        columns = ["customer_id", "feedback_category", "sentiment", "complaint_intensity", "raw_text"]
+        # Updated to ensure order matches /reputation API specifications
+        columns = ["customer_id", "username", "feedback_category", "sentiment", "complaint_intensity", "raw_text"]
         result_df = result_df[columns]
 
         result_df.to_csv(output_file, index=False, encoding="utf-8-sig")
@@ -147,8 +154,6 @@ def analyze_feedback_with_schema(feedback_file, output_file="data/processed_comm
 
 
 if __name__ == "__main__":
-    import glob
-
     json_files = glob.glob("data/comments_*.json")
     if not json_files:
         print("No comments_*.json files found in data/ directory.")
