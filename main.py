@@ -257,7 +257,7 @@ def calculate_brand_reputation():
     Ingests the LLM processed feedback summary metrics (Moroccan Darija sentiments) 
     to output high-level KPIs on social brand health, sentiment distributions, and core issues.
     """
-    processed_feedback_path = "data/processed_feedback.csv"
+    processed_feedback_path = "data/processed_comments.csv"
     
     if not os.path.exists(processed_feedback_path):
         raise HTTPException(
