@@ -364,7 +364,7 @@ def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, thresh
         # CASE 1: TARGETED CUSTOMER SPECIFIC QUERY (Optimized server-side filter)
         # ----------------------------------------------------
         if customer_id:
-            target_id = str(customer_id).strip()
+            target_id = f'{str(customer_id).strip()}'
             
             # Efficient indexing lookup directly on the database instead of loading all rows
             res = db.client.table("subscribers").select("*").eq("customer_id", target_id).execute()
