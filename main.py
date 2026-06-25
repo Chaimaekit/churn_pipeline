@@ -349,9 +349,9 @@ def calculate_brand_reputation():
 @app.get("/churn")
 def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, threshold: float = 0.40):
     """
-    Dual-purpose analytical endpoint:
-    1. No parameter: Returns global business summary metrics + top 10 highest risk customer table.
-    2. With customer_id: Returns targeted profile details and full predictive metrics for that specific user.
+    Dual-purpose analytical endpoint optimized for telecom scale:
+    1. No parameter: Queries database, computes batch churn risk, and returns the top 10 highest risk customer profiles.
+    2. With customer_id: Direct key lookup via database indexing, returning granular individual predictive metrics.
     """
     if CHAMPION_MODEL is None:
         raise HTTPException(status_code=503, detail="Machine learning engine weights not compiled.")
@@ -360,23 +360,20 @@ def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, thresh
         raise HTTPException(status_code=500, detail="Supabase connection target missing.")
         
     try:
-        # Fetch live production subscriber frames
-        res = db.client.table("subscribers").select("*").execute()
-        if not res.data:
-            raise HTTPException(status_code=444, detail="The production database tables are currently empty.")
-            
-        raw_df = pd.DataFrame(res.data)
-        
         # ----------------------------------------------------
-        # CASE 1: TARGETED CUSTOMER SPECIFIC QUERY
+        # CASE 1: TARGETED CUSTOMER SPECIFIC QUERY (Optimized server-side filter)
         # ----------------------------------------------------
         if customer_id:
             target_id = str(customer_id).strip()
-            matched_user = raw_df[raw_df['customer_id'] == target_id]
             
-            if matched_user.empty:
+            # Efficient indexing lookup directly on the database instead of loading all rows
+            res = db.client.table("subscribers").select("*").eq("customer_id", target_id).execute()
+            
+            if not res.data:
                 raise HTTPException(status_code=404, detail=f"Customer ID '{target_id}' not found in database records.")
                 
+            matched_user = pd.DataFrame(res.data)
+            
             # Process and predict exclusively for this user profile
             cleaned_df = execute_cleaning_and_quality_logs(matched_user)
             X_processed, _ = engineer_features(cleaned_df)
@@ -410,9 +407,16 @@ def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, thresh
             }
 
         # ----------------------------------------------------
-        # CASE 2: AGGREGATED DASHBOARD ENGINE MODE (Fallback)
+        # CASE 2: AGGREGATED DASHBOARD ENGINE MODE (Fallback if no search ID)
         # ----------------------------------------------------
+        # Note: For strict production safety at scale, consider adding a .limit(1000) here
+        res = db.client.table("subscribers").select("*").execute()
+        if not res.data:
+            raise HTTPException(status_code=444, detail="The production database tables are currently empty.")
+            
+        raw_df = pd.DataFrame(res.data)
         total_customers = len(raw_df)
+        
         cleaned_df = execute_cleaning_and_quality_logs(raw_df)
         X_processed, _ = engineer_features(cleaned_df)
         
@@ -426,6 +430,7 @@ def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, thresh
         avg_churn_risk = round(float(probabilities.mean() * 100), 2)
         high_risk_count = int((probabilities >= threshold).sum())
         
+        # Sort and extract exactly the top 10 highest risk customer matrix rows
         sample_df = raw_df.sort_values(by="churn_probability", ascending=False).head(10)
         top_risk_profiles = []
         for _, row in sample_df.iterrows():
@@ -452,6 +457,7 @@ def get_churn_data_or_customer_profile(customer_id: Optional[str] = None, thresh
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to compile churn data stream: {str(e)}")
+
 
 
 if __name__ == '__main__':

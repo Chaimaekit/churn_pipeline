@@ -11,10 +11,11 @@ import re
 import json
 import hashlib
 from datetime import datetime
+from selenium.webdriver.common.action_chains import ActionChains
 
 # ── CONFIG ─────────────────────────────────────────────────────────────
 PAGE_NAME = "orangemaroc"
-MAX_POSTS = 50
+MAX_POSTS = 10
 CHROME_BINARY = r"C:\Users\chaim\Downloads\chrome-win\chrome.exe"
 MAX_RETRIES = 2
 
@@ -96,6 +97,7 @@ def collect_post_urls(page_name, limit):
     result = list(urls)[:limit]
     print(f"Collected {len(result)} unique post URLs")
     return result
+    
 
 # ── CLICK COMMENT BUTTON (for reels) ─────────────────────────────────────
 def click_comment_button():
@@ -253,15 +255,121 @@ def extract_comments(post_url):
 
     return comments
 
+
+def collect_posts_with_dates(page_name, max_posts):
+    """
+    Scrolls the main page feed and captures both the link URL AND the relative
+    date simultaneously from the uniform feed card layout using multiple structural selectors.
+    """
+    print(f"Navigating to profile feed: https://www.facebook.com/{page_name} ...")
+    driver.get(f"https://www.facebook.com/{page_name}")
+    time.sleep(6)  # Give the page initial buffer time to populate cards
+
+    discovered_items = []
+    seen_urls = set()
+    
+    no_change_scrolls = 0
+    max_no_change = 8
+    
+    # Broadened selectors to capture metadata header anchor links on profile timelines
+    selectors = [
+        "span.x11i5rnm a[role='link']",
+        "span > a[role='link']",
+        "div[data-testid='story-meta-container'] a",
+        "a[href*='/posts/']",
+        "a[href*='/reel/']"
+    ]
+    
+    while len(discovered_items) < max_posts:
+        initial_count = len(discovered_items)
+        feed_elements = []
+        
+        # Gather elements across any matching layout strategy
+        for selector in selectors:
+            found = driver.find_elements(By.CSS_SELECTOR, selector)
+            if found:
+                feed_elements.extend(found)
+        
+        for el in feed_elements:
+            try:
+                url = el.get_attribute("href")
+                if not url:
+                    continue
+                
+                # Split off tracking parameters
+                clean_url = url.split('?')[0] if '?' in url else url
+                
+                # Filter out standard noise and keep actionable targets
+                if clean_url not in seen_urls and ("/posts/" in url or "/reel/" in url or "/permalink.php" in url):
+                    
+                    # Try to parse timestamps from attributes or inner texts
+                    feed_date = el.get_attribute("aria-label") or el.get_attribute("title")
+                    if not feed_date or "playback" in feed_date.lower():
+                        feed_date = el.text
+                    
+                    # Clean up date context strings
+                    feed_date = feed_date.strip() if feed_date else ""
+                    if not feed_date or len(feed_date) > 40 or "video" in feed_date.lower():
+                        # Fallback: check parent wrapper text elements if the link itself is textless
+                        try:
+                            parent_text = el.find_element(By.XPATH, "./ancestor::span[1]").text
+                            if parent_text:
+                                feed_date = parent_text.strip()
+                        except Exception:
+                            feed_date = "Recent Post"
+                            
+                    if not feed_date:
+                        feed_date = "Recent Post"
+                    
+                    seen_urls.add(clean_url)
+                    discovered_items.append({
+                        "url": url,
+                        "date": feed_date
+                    })
+                    print(f"Found [{len(discovered_items)}]: {clean_url} | Date: {feed_date}")
+                    
+                    if len(discovered_items) >= max_posts:
+                        break
+            except Exception:
+                continue
+                
+        if len(discovered_items) >= max_posts:
+            break
+            
+        # Scroll down to load more timeline cards slowly so elements append cleanly
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(4)
+        
+        if len(discovered_items) == initial_count:
+            no_change_scrolls += 1
+            # Push page down slightly if stuck to jog lazy loader script triggers
+            driver.execute_script("window.scrollBy(0, -200);")
+            time.sleep(1)
+            driver.execute_script("window.scrollBy(0, 400);")
+            if no_change_scrolls >= max_no_change:
+                print("No new items discovered after scrolling attempts. Terminating discovery loop.")
+                break
+        else:
+            no_change_scrolls = 0
+
+    return discovered_items
+
+
 # ── MAIN ─────────────────────────────────────────────────────────────────
 all_comments = []
 skipped_posts = []
 
-post_urls = collect_post_urls(PAGE_NAME, MAX_POSTS)
+# Collect posts and dates as dictionaries using our rewritten function
+discovered_items = collect_posts_with_dates(PAGE_NAME, MAX_POSTS)
 
-for i, url in enumerate(post_urls, 1):
+# ── MODIFIED RUN LOOP ──────────────────────────────────────────────────
+for i, item in enumerate(discovered_items, 1):
+    url = item["url"]
+    pre_scraped_date = item["date"]
+
     print(f"\n{'='*50}")
-    print(f"[{i}/{len(post_urls)}] Processing: {url}")
+    print(f"[{i}/{len(discovered_items)}] Processing: {url}")
+    print(f"Pre-scraped Feed Date: {pre_scraped_date}")
     print(f"{'='*50}")
 
     is_reel = "/reel/" in url
@@ -269,7 +377,7 @@ for i, url in enumerate(post_urls, 1):
 
     try:
         driver.get(url)
-        time.sleep(4)
+        time.sleep(4)  # Allow page layout components to load
 
         # REELS: click comment button
         if is_reel:
@@ -295,8 +403,13 @@ for i, url in enumerate(post_urls, 1):
             clicks = load_more_comments(max_clicks=15)
             print(f"Clicked 'load more' {clicks} times")
 
-        # Extract
+        # Extract comments
         comments = extract_comments(url)
+        
+        # Inject the pre-scraped date directly into every parsed comment object!
+        for comment in comments:
+            comment["associated_post_date"] = pre_scraped_date
+
         all_comments.extend(comments)
         print(f"Extracted {len(comments)} comments")
 
@@ -309,7 +422,7 @@ for i, url in enumerate(post_urls, 1):
 # ── SAVE RESULTS ─────────────────────────────────────────────────────────
 print(f"\n{'='*50}")
 print(f"SCRAPING COMPLETE")
-print(f"Total posts processed: {len(post_urls) - len(skipped_posts)}")
+print(f"Total posts processed: {len(discovered_items) - len(skipped_posts)}")
 print(f"Skipped posts: {len(skipped_posts)}")
 print(f"Total comments: {len(all_comments)}")
 print(f"{'='*50}")
